@@ -1,58 +1,43 @@
 const tg = window.Telegram?.WebApp;
 if (tg) tg.ready();
 
-// 30 DOOM-INSPIRED MONSTERS ACROSS 6 CHAPTERS
+// 30 DARK FANTASY BOT BOSSES & MONSTERS (С ИСПОЛЬЗОВАНИЕМ ВАШИХ АВАТАРОВ)
 const MONSTERS = [
-  // Chapter 1: Hellish Outpost (1-5)
-  { id: 1, chapter: 1, chapterName: "ГЛАВА I: АДСКИЙ РУБЕЖ", name: "Зомби-Солдат", hp: 30, maxHp: 30, icon: "🧟", xp: 15, gold: 5, atk: 5 },
-  { id: 2, chapter: 1, chapterName: "ГЛАВА I: АДСКИЙ РУБЕЖ", name: "Адская Гончая", hp: 45, maxHp: 45, icon: "🐕", xp: 25, gold: 10, atk: 8 },
-  { id: 3, chapter: 1, chapterName: "ГЛАВА I: АДСКИЙ РУБЕЖ", name: "Бес (Imp)", hp: 60, maxHp: 60, icon: "😈", xp: 40, gold: 18, atk: 10 },
-  { id: 4, chapter: 1, chapterName: "ГЛАВА I: АДСКИЙ РУБЕЖ", name: "Демон-Пинки", hp: 90, maxHp: 90, icon: "🐗", xp: 60, gold: 30, atk: 12 },
-  { id: 5, chapter: 1, chapterName: "ГЛАВА I: АДСКИЙ РУБЕЖ", name: "👑 БОСС: Рыцарь Ада", hp: 150, maxHp: 150, icon: "👹", xp: 150, gold: 80, atk: 18 },
-
-  // Chapter 2: Iron Citadel (6-10)
-  { id: 6, chapter: 2, chapterName: "ГЛАВА II: ЦИТАДЕЛЬ ЖЕЛЕЗА", name: "Арахнотрон", hp: 200, maxHp: 200, icon: "🕷️", xp: 180, gold: 100, atk: 15 },
-  { id: 7, chapter: 2, chapterName: "ГЛАВА II: ЦИТАДЕЛЬ ЖЕЛЕЗА", name: "Какодемон", hp: 280, maxHp: 280, icon: "👁️", xp: 230, gold: 130, atk: 18 },
-  { id: 8, chapter: 2, chapterName: "ГЛАВА II: ЦИТАДЕЛЬ ЖЕЛЕЗА", name: "Пехотинец-Ревенант", hp: 360, maxHp: 360, icon: "💀", xp: 300, gold: 170, atk: 22 },
-  { id: 9, chapter: 2, chapterName: "ГЛАВА II: ЦИТАДЕЛЬ ЖЕЛЕЗА", name: "Манкубус", hp: 450, maxHp: 450, icon: "🧌", xp: 400, gold: 220, atk: 25 },
-  { id: 10, chapter: 2, chapterName: "ГЛАВА II: ЦИТАДЕЛЬ ЖЕЛЕЗА", name: "👑 БОСС: Кибердемон", hp: 600, maxHp: 600, icon: "🤖", xp: 600, gold: 350, atk: 30 },
-
-  // Chapter 3: Scorched Earth (11-15)
-  { id: 11, chapter: 3, chapterName: "ГЛАВА III: ВЫЖЖЕННЫЕ ЗЕМЛИ", name: "Огненный Элементаль", hp: 750, maxHp: 750, icon: "🔥", xp: 750, gold: 420, atk: 28 },
-  { id: 12, chapter: 3, chapterName: "ГЛАВА III: ВЫЖЖЕННЫЕ ЗЕМЛИ", name: "Адский Жнец", hp: 900, maxHp: 900, icon: "🦴", xp: 950, gold: 520, atk: 32 },
-  { id: 13, chapter: 3, chapterName: "ГЛАВА III: ВЫЖЖЕННЫЕ ЗЕМЛИ", name: "Арчвайл", hp: 1100, maxHp: 1100, icon: "🧙‍♂️", xp: 1200, gold: 650, atk: 35 },
-  { id: 14, chapter: 3, chapterName: "ГЛАВА III: ВЫЖЖЕННЫЕ ЗЕМЛИ", name: "Барон Ада", hp: 1400, maxHp: 1400, icon: "👺", xp: 1500, gold: 800, atk: 40 },
-  { id: 15, chapter: 3, chapterName: "ГЛАВА III: ВЫЖЖЕННЫЕ ЗЕМЛИ", name: "👑 БОСС: Паук-Вождь", hp: 1800, maxHp: 1800, icon: "🕷️", xp: 2200, gold: 1200, atk: 45 },
-
-  // Chapters 4-6 generated programmatically for brevity...
+  { id: 1, chapter: 1, chapterName: "ГЛАВА I: ШЕПЧУЩИЙ ЛЕС", name: "Гоблин-Разведчик", hp: 30, maxHp: 30, imgSrc: "assets/goblins/Icon49.png", xp: 15, gold: 5, atk: 4 },
+  { id: 2, chapter: 1, chapterName: "ГЛАВА I: ШЕПЧУЩИЙ ЛЕС", name: "Гоблин-Воин", hp: 45, maxHp: 45, imgSrc: "assets/goblins/Icon50.png", xp: 25, gold: 10, atk: 7 },
+  { id: 3, chapter: 1, chapterName: "ГЛАВА I: ШЕПЧУЩИЙ ЛЕС", name: "Орк-Берсерк", hp: 65, maxHp: 65, imgSrc: "assets/goblins/Icon49.png", xp: 40, gold: 18, atk: 10 },
+  { id: 4, chapter: 1, chapterName: "ГЛАВА I: ШЕПЧУЩИЙ ЛЕС", name: "Шаман Тьмы", hp: 95, maxHp: 95, imgSrc: "assets/goblins/Icon50.png", xp: 60, gold: 30, atk: 12 },
+  { id: 5, chapter: 1, chapterName: "ГЛАВА I: ШЕПЧУЩИЙ ЛЕС", name: "👑 БОСС: Вождь Гоблинов", hp: 150, maxHp: 150, imgSrc: "assets/goblins/Icon49.png", xp: 150, gold: 80, atk: 18 }
 ];
 
-// Fill remaining levels up to 30
-for (let i = 16; i <= 30; i++) {
-  const ch = i <= 20 ? 4 : (i <= 25 ? 5 : 6);
+// Авто-генерация остальных уровней до 30 с чередованием аватарок
+for (let i = 6; i <= 30; i++) {
+  const ch = Math.ceil(i / 5);
+  const iconName = i % 2 === 0 ? "Icon50.png" : "Icon49.png";
   MONSTERS.push({
-    id: i, chapter: ch, chapterName: `ГЛАВА ${ch}: БЕЗДНА ХАОСА`,
-    name: `Титан Бездны LVL ${i}`, hp: i * 150, maxHp: i * 150,
-    icon: i % 2 === 0 ? "🐲" : "👾", xp: i * 300, gold: i * 150, atk: i * 3
+    id: i, chapter: ch, chapterName: `ГЛАВА ${ch}: ПОДЗЕМЕЛЬЯ БЕЗДНЫ`,
+    name: `Страж Бездны LVL ${i}`, hp: i * 130, maxHp: i * 130,
+    imgSrc: `assets/goblins/${iconName}`, xp: i * 200, gold: i * 100, atk: i * 3
   });
 }
 
+// МАГАЗИН ОРУЖИЯ И МИНЕРАЛОВ ИЗ ВАШЕГО АРХИВА
 const SHOP_ITEMS = {
   weapons: [
-    { id: "w1", name: "Бензопила", damage: 10, price: 0 },
-    { id: "w2", name: "Двустволка", damage: 25, price: 60 },
-    { id: "w3", name: "Плазмоган", damage: 60, price: 250 },
-    { id: "w4", name: "BFG 9000", damage: 180, price: 1000 }
+    { id: "w1", name: "Железный Клин", damage: 10, price: 0, icon: "assets/minerals/Icon1.png" },
+    { id: "w2", name: "Рубиновый Меч", damage: 25, price: 50, icon: "assets/minerals/Icon2.png" },
+    { id: "w3", name: "Изумрудный Клинок", damage: 60, price: 200, icon: "assets/minerals/Icon3.png" },
+    { id: "w4", name: "Алмазный Секач", damage: 180, price: 800, icon: "assets/minerals/Icon4.png" }
   ],
   boots: [
-    { id: "b1", name: "Кожаный Жилет", damage: 10, price: 0 },
-    { id: "b2", name: "Броня Претора", damage: 25, price: 60 },
-    { id: "b3", name: "Титановый Экзоскелет", damage: 60, price: 250 },
-    { id: "b4", name: "Божественная Броня", damage: 180, price: 1000 }
+    { id: "b1", name: "Кожаная Броня", damage: 10, price: 0, icon: "assets/minerals/Icon10.png" },
+    { id: "b2", name: "Пластинчатый Доспех", damage: 25, price: 50, icon: "assets/minerals/Icon11.png" },
+    { id: "b3", name: "Мифриловая Броня", damage: 60, price: 200, icon: "assets/minerals/Icon12.png" },
+    { id: "b4", name: "Доспех Бездны", damage: 180, price: 800, icon: "assets/minerals/Icon13.png" }
   ]
 };
 
-let gameState = JSON.parse(localStorage.getItem('fit_doom_state')) || {
+let gameState = JSON.parse(localStorage.getItem('fit_dark_state')) || {
   monsterIdx: 0,
   playerHp: 100,
   playerMaxHp: 100,
@@ -70,7 +55,7 @@ let currentExercise = 'pushup';
 let monsterAttackTimer = null;
 
 function saveState() {
-  localStorage.setItem('fit_doom_state', JSON.stringify(gameState));
+  localStorage.setItem('fit_dark_state', JSON.stringify(gameState));
 }
 
 document.getElementById('health-form').addEventListener('submit', (e) => {
@@ -84,19 +69,15 @@ document.getElementById('health-form').addEventListener('submit', (e) => {
   startMonsterAttackLoop();
 });
 
-// ENEMY COUNTER-ATTACK AI LOOP
 function startMonsterAttackLoop() {
   if (monsterAttackTimer) clearInterval(monsterAttackTimer);
   
-  // Monster attacks player every 6 seconds if player is idling
   monsterAttackTimer = setInterval(() => {
     const monster = MONSTERS[gameState.monsterIdx];
     if (!monster || currentMonsterHp <= 0 || gameState.playerHp <= 0) return;
 
-    // Deal damage to player
     gameState.playerHp = Math.max(0, gameState.playerHp - monster.atk);
     
-    // Screen Flash Effect & Vibration
     const flash = document.getElementById('damage-flash');
     flash.classList.add('active');
     setTimeout(() => flash.classList.remove('active'), 150);
@@ -106,7 +87,7 @@ function startMonsterAttackLoop() {
     updateGameUI();
 
     if (gameState.playerHp <= 0) {
-      alert("💀 ВЫ ПОГИБЛИ! Здоровье восстановлено, попробуйте снова.");
+      alert("💀 ВЫ ПОГИБЛИ В БОЮ! Здоровье восстановлено.");
       gameState.playerHp = gameState.playerMaxHp;
       updateGameUI();
     }
@@ -119,11 +100,8 @@ function loadMonster() {
   
   currentMonsterHp = m.hp;
   document.getElementById('monster-name').innerText = m.name;
-  document.getElementById('monster-sprite').innerText = m.icon;
+  document.getElementById('monster-img').src = m.imgSrc;
   document.getElementById('chapter-title').innerText = m.chapterName;
-  
-  const arenaBg = document.getElementById('arena-bg');
-  arenaBg.className = `arena-viewport chapter-${m.chapter}`;
   
   updateGameUI();
 }
@@ -142,21 +120,20 @@ function switchExercise(type) {
   if (window.resetExerciseStage) window.resetExerciseStage();
 }
 
-// TRIGGERED STRICTLY BY VALID MOTION CYCLE IN POSE.JS
 function onRepCompleted(type) {
   let dmg = (type === 'pushup') ? getPushupDamage() : getSquatDamage();
   
   if (type === 'pushup') gameState.totalPushups++;
   if (type === 'squat') gameState.totalSquats++;
   
-  gameState.gold += 2;
+  gameState.gold += 3;
   currentMonsterHp = Math.max(0, currentMonsterHp - dmg);
 
   if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
 
   const sprite = document.getElementById('monster-sprite');
   sprite.classList.add('monster-hit-anim');
-  setTimeout(() => sprite.classList.remove('monster-hit-anim'), 200);
+  setTimeout(() => sprite.classList.remove('monster-hit-anim'), 220);
 
   showDamagePopup(`-${dmg} HP`);
   updateGameUI();
@@ -173,24 +150,22 @@ function showDamagePopup(text) {
   popup.className = 'damage-popup';
   popup.innerText = text;
   container.appendChild(popup);
-  setTimeout(() => popup.remove(), 700);
+  setTimeout(() => popup.remove(), 750);
 }
 
 function onMonsterDefeated() {
   const m = MONSTERS[gameState.monsterIdx];
   gameState.gold += m.gold;
   gameState.xp += m.xp;
-  
-  // Heal player slightly upon victory
-  gameState.playerHp = Math.min(gameState.playerMaxHp, gameState.playerHp + 25);
+  gameState.playerHp = Math.min(gameState.playerMaxHp, gameState.playerHp + 35);
 
-  alert(`⚔️ ДЕМОН ${m.name} УНИЧТОЖЕН!\nПолучено: +${m.gold} 🪙 | +${m.xp} XP`);
+  alert(`⚔️ ТВАРЬ ${m.name} ПОВЕРЖЕНА!\nПолучено: +${m.gold} 💎 Руд | +${m.xp} XP`);
 
   gameState.monsterIdx++;
   if (gameState.monsterIdx < MONSTERS.length) {
     loadMonster();
   } else {
-    alert("🏆 ВЫ ОЧИСТИЛИ АД И ПРОШЛИ ВСЕ 30 УРОВНЕЙ!");
+    alert("🏆 ВЫ ВЫЖИЛИ И ОЧИСТИЛИ ВСЕ 30 УРОВНЕЙ БЕЗДНЫ!");
   }
   saveState();
 }
@@ -198,17 +173,15 @@ function onMonsterDefeated() {
 function updateGameUI() {
   const m = MONSTERS[gameState.monsterIdx];
   
-  // Monster HP
   const monsterPct = (currentMonsterHp / m.hp) * 100;
   document.getElementById('monster-hp-fill').style.width = `${monsterPct}%`;
   document.getElementById('monster-hp-text').innerText = `${currentMonsterHp} / ${m.hp} HP`;
 
-  // Player HP
   const playerPct = (gameState.playerHp / gameState.playerMaxHp) * 100;
   document.getElementById('player-hp-fill').style.width = `${playerPct}%`;
   document.getElementById('player-hp-text').innerText = `${gameState.playerHp} / ${gameState.playerMaxHp} HP`;
   
-  document.getElementById('shop-gold').innerText = `${gameState.gold} 🪙`;
+  document.getElementById('shop-gold').innerText = `${gameState.gold} 💎`;
   document.getElementById('dmg-pushup-val').innerText = getPushupDamage();
   document.getElementById('dmg-squat-val').innerText = getSquatDamage();
   document.getElementById('rep-count').innerText = `💪 ${gameState.totalPushups} | 🦵 ${gameState.totalSquats}`;
@@ -226,10 +199,14 @@ function renderShop() {
     const container = document.getElementById(containerId);
     container.innerHTML = items.map(item => `
       <div class="shop-item ${equippedId === item.id ? 'equipped' : ''}">
-        <div><strong>${item.name}</strong><br><small>Урон: +${item.damage}</small></div>
+        <div>
+          <img src="${item.icon}" class="mineral-icon" />
+          <strong>${item.name}</strong><br>
+          <small>Урон: +${item.damage}</small>
+        </div>
         <button class="btn-buy" onclick="buyItem('${item.id}', '${type}', ${item.price})" 
           ${equippedId === item.id ? 'disabled' : ''}>
-          ${gameState.inventory.includes(item.id) ? 'Экипировать' : item.price + ' 🪙'}
+          ${gameState.inventory.includes(item.id) ? 'Экипировать' : item.price + ' 💎'}
         </button>
       </div>
     `).join('');
@@ -241,7 +218,7 @@ function renderShop() {
 
 function buyItem(id, type, price) {
   if (!gameState.inventory.includes(id)) {
-    if (gameState.gold < price) return alert("Недостаточно золота!");
+    if (gameState.gold < price) return alert("Недостаточно минералов!");
     gameState.gold -= price;
     gameState.inventory.push(id);
   }
