@@ -1,41 +1,47 @@
 const tg = window.Telegram?.WebApp;
 if (tg) tg.ready();
 
-// 30 DARK FANTASY BOT BOSSES & MONSTERS (С ИСПОЛЬЗОВАНИЕМ ВАШИХ АВАТАРОВ)
+// 30 DARK FANTASY МОНСТРОВ
 const MONSTERS = [
-  { id: 1, chapter: 1, chapterName: "ГЛАВА I: ШЕПЧУЩИЙ ЛЕС", name: "Гоблин-Разведчик", hp: 30, maxHp: 30, imgSrc: "assets/goblins/Icon49.png", xp: 15, gold: 5, atk: 4 },
-  { id: 2, chapter: 1, chapterName: "ГЛАВА I: ШЕПЧУЩИЙ ЛЕС", name: "Гоблин-Воин", hp: 45, maxHp: 45, imgSrc: "assets/goblins/Icon50.png", xp: 25, gold: 10, atk: 7 },
-  { id: 3, chapter: 1, chapterName: "ГЛАВА I: ШЕПЧУЩИЙ ЛЕС", name: "Орк-Берсерк", hp: 65, maxHp: 65, imgSrc: "assets/goblins/Icon49.png", xp: 40, gold: 18, atk: 10 },
-  { id: 4, chapter: 1, chapterName: "ГЛАВА I: ШЕПЧУЩИЙ ЛЕС", name: "Шаман Тьмы", hp: 95, maxHp: 95, imgSrc: "assets/goblins/Icon50.png", xp: 60, gold: 30, atk: 12 },
-  { id: 5, chapter: 1, chapterName: "ГЛАВА I: ШЕПЧУЩИЙ ЛЕС", name: "👑 БОСС: Вождь Гоблинов", hp: 150, maxHp: 150, imgSrc: "assets/goblins/Icon49.png", xp: 150, gold: 80, atk: 18 }
+  { id: 1, chapter: 1, chapterName: "ГЛАВА I: ШЕПЧУЩИЙ ЛЕС", name: "Гоблин-Разведчик", hp: 30, maxHp: 30, icon: "🧟", xp: 15, gold: 5, atk: 4 },
+  { id: 2, chapter: 1, chapterName: "ГЛАВА I: ШЕПЧУЩИЙ ЛЕС", name: "Лесной Орк", hp: 45, maxHp: 45, icon: "👹", xp: 25, gold: 10, atk: 7 },
+  { id: 3, chapter: 1, chapterName: "ГЛАВА I: ШЕПЧУЩИЙ ЛЕС", name: "Шаман Тьмы", hp: 65, maxHp: 65, icon: "🧙‍♂️", xp: 40, gold: 18, atk: 10 },
+  { id: 4, chapter: 1, chapterName: "ГЛАВА I: ШЕПЧУЩИЙ ЛЕС", name: "Пещерный Огр", hp: 95, maxHp: 95, icon: "🧌", xp: 60, gold: 30, atk: 12 },
+  { id: 5, chapter: 1, chapterName: "ГЛАВА I: ШЕПЧУЩИЙ ЛЕС", name: "👑 БОСС: Вождь Гоблинов", hp: 150, maxHp: 150, icon: "👑", xp: 150, gold: 80, atk: 18 }
 ];
 
-// Авто-генерация остальных уровней до 30 с чередованием аватарок
 for (let i = 6; i <= 30; i++) {
   const ch = Math.ceil(i / 5);
-  const iconName = i % 2 === 0 ? "Icon50.png" : "Icon49.png";
   MONSTERS.push({
     id: i, chapter: ch, chapterName: `ГЛАВА ${ch}: ПОДЗЕМЕЛЬЯ БЕЗДНЫ`,
     name: `Страж Бездны LVL ${i}`, hp: i * 130, maxHp: i * 130,
-    imgSrc: `assets/goblins/${iconName}`, xp: i * 200, gold: i * 100, atk: i * 3
+    icon: i % 2 === 0 ? "🐉" : "👾", xp: i * 200, gold: i * 100, atk: i * 3
   });
 }
 
-// МАГАЗИН ОРУЖИЯ И МИНЕРАЛОВ ИЗ ВАШЕГО АРХИВА
+// МАГАЗИН ОРУЖИЯ И БРОНИ
 const SHOP_ITEMS = {
   weapons: [
-    { id: "w1", name: "Железный Клин", damage: 10, price: 0, icon: "assets/minerals/Icon1.png" },
-    { id: "w2", name: "Рубиновый Меч", damage: 25, price: 50, icon: "assets/minerals/Icon2.png" },
-    { id: "w3", name: "Изумрудный Клинок", damage: 60, price: 200, icon: "assets/minerals/Icon3.png" },
-    { id: "w4", name: "Алмазный Секач", damage: 180, price: 800, icon: "assets/minerals/Icon4.png" }
+    { id: "w1", name: "Железный Меч", damage: 10, price: 0, icon: "🗡️" },
+    { id: "w2", name: "Рубиновый Клинок", damage: 25, price: 50, icon: "♦️" },
+    { id: "w3", name: "Изумрудный Топор", damage: 60, price: 200, icon: "❇️" },
+    { id: "w4", name: "Алмазный Секач", damage: 180, price: 800, icon: "💎" }
   ],
   boots: [
-    { id: "b1", name: "Кожаная Броня", damage: 10, price: 0, icon: "assets/minerals/Icon10.png" },
-    { id: "b2", name: "Пластинчатый Доспех", damage: 25, price: 50, icon: "assets/minerals/Icon11.png" },
-    { id: "b3", name: "Мифриловая Броня", damage: 60, price: 200, icon: "assets/minerals/Icon12.png" },
-    { id: "b4", name: "Доспех Бездны", damage: 180, price: 800, icon: "assets/minerals/Icon13.png" }
+    { id: "b1", name: "Кожаный Доспех", damage: 10, price: 0, icon: "🛡️" },
+    { id: "b2", name: "Пластинчатая Броня", damage: 25, price: 50, icon: "⚙️" },
+    { id: "b3", name: "Мифриловые Поножи", damage: 60, price: 200, icon: "🌟" },
+    { id: "b4", name: "Доспех Бездны", damage: 180, price: 800, icon: "🔱" }
   ]
 };
+
+// СПИСОК ДОСТИЖЕНИЙ
+const ACHIEVEMENTS = [
+  { id: "a1", name: "Первая Кровь", desc: "Сделать 1 отжимание", icon: "🩸", reqPushups: 1 },
+  { id: "a2", name: "Железные Ноги", desc: "Сделать 10 приседаний", icon: "🦵", reqSquats: 10 },
+  { id: "a3", name: "Убийца Тварей", desc: "Пройти 5 уровней", icon: "⚔️", reqLevel: 5 },
+  { id: "a4", name: "Мастер Бездны", desc: "Сделать 100 отжиманий", icon: "🏆", reqPushups: 100 }
+];
 
 let gameState = JSON.parse(localStorage.getItem('fit_dark_state')) || {
   monsterIdx: 0,
@@ -58,6 +64,13 @@ function saveState() {
   localStorage.setItem('fit_dark_state', JSON.stringify(gameState));
 }
 
+// Запуск при старте
+document.addEventListener('DOMContentLoaded', () => {
+  renderShop();
+  renderAchievements();
+  updateGameUI();
+});
+
 document.getElementById('health-form').addEventListener('submit', (e) => {
   e.preventDefault();
   document.getElementById('screen-onboarding').classList.remove('active');
@@ -65,6 +78,7 @@ document.getElementById('health-form').addEventListener('submit', (e) => {
   
   loadMonster();
   renderShop();
+  renderAchievements();
   initCamera();
   startMonsterAttackLoop();
 });
@@ -79,8 +93,10 @@ function startMonsterAttackLoop() {
     gameState.playerHp = Math.max(0, gameState.playerHp - monster.atk);
     
     const flash = document.getElementById('damage-flash');
-    flash.classList.add('active');
-    setTimeout(() => flash.classList.remove('active'), 150);
+    if (flash) {
+      flash.classList.add('active');
+      setTimeout(() => flash.classList.remove('active'), 150);
+    }
     
     if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
 
@@ -100,7 +116,7 @@ function loadMonster() {
   
   currentMonsterHp = m.hp;
   document.getElementById('monster-name').innerText = m.name;
-  document.getElementById('monster-img').src = m.imgSrc;
+  document.getElementById('monster-sprite').innerText = m.icon;
   document.getElementById('chapter-title').innerText = m.chapterName;
   
   updateGameUI();
@@ -132,10 +148,13 @@ function onRepCompleted(type) {
   if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
 
   const sprite = document.getElementById('monster-sprite');
-  sprite.classList.add('monster-hit-anim');
-  setTimeout(() => sprite.classList.remove('monster-hit-anim'), 220);
+  if (sprite) {
+    sprite.classList.add('monster-hit-anim');
+    setTimeout(() => sprite.classList.remove('monster-hit-anim'), 220);
+  }
 
   showDamagePopup(`-${dmg} HP`);
+  renderAchievements();
   updateGameUI();
   saveState();
 
@@ -146,6 +165,7 @@ function onRepCompleted(type) {
 
 function showDamagePopup(text) {
   const container = document.getElementById('damage-popup-container');
+  if (!container) return;
   const popup = document.createElement('div');
   popup.className = 'damage-popup';
   popup.innerText = text;
@@ -172,6 +192,7 @@ function onMonsterDefeated() {
 
 function updateGameUI() {
   const m = MONSTERS[gameState.monsterIdx];
+  if (!m) return;
   
   const monsterPct = (currentMonsterHp / m.hp) * 100;
   document.getElementById('monster-hp-fill').style.width = `${monsterPct}%`;
@@ -197,12 +218,15 @@ function showTab(tabName) {
 function renderShop() {
   const renderList = (items, containerId, equippedId, type) => {
     const container = document.getElementById(containerId);
+    if (!container) return;
     container.innerHTML = items.map(item => `
       <div class="shop-item ${equippedId === item.id ? 'equipped' : ''}">
-        <div>
-          <img src="${item.icon}" class="mineral-icon" />
-          <strong>${item.name}</strong><br>
-          <small>Урон: +${item.damage}</small>
+        <div class="shop-item-info">
+          <div class="icon-frame shop-icon-frame">${item.icon}</div>
+          <div>
+            <strong>${item.name}</strong><br>
+            <small style="color: #2ecc71;">Урон: +${item.damage}</small>
+          </div>
         </div>
         <button class="btn-buy" onclick="buyItem('${item.id}', '${type}', ${item.price})" 
           ${equippedId === item.id ? 'disabled' : ''}>
@@ -216,9 +240,29 @@ function renderShop() {
   renderList(SHOP_ITEMS.boots, 'boots-list', gameState.equippedBoots, 'boot');
 }
 
+function renderAchievements() {
+  const container = document.getElementById('achievements-list');
+  if (!container) return;
+
+  container.innerHTML = ACHIEVEMENTS.map(ach => {
+    let unlocked = false;
+    if (ach.reqPushups && gameState.totalPushups >= ach.reqPushups) unlocked = true;
+    if (ach.reqSquats && gameState.totalSquats >= ach.reqSquats) unlocked = true;
+    if (ach.reqLevel && (gameState.monsterIdx + 1) >= ach.reqLevel) unlocked = true;
+
+    return `
+      <div class="achieve-card ${unlocked ? 'unlocked' : ''}">
+        <div class="icon-frame shop-icon-frame" style="margin:0 auto;">${ach.icon}</div>
+        <strong style="font-size: 12px; color: ${unlocked ? '#c9a050' : '#666'};">${ach.name}</strong>
+        <small style="font-size: 10px; color: #888;">${ach.desc}</small>
+      </div>
+    `;
+  }).join('');
+}
+
 function buyItem(id, type, price) {
   if (!gameState.inventory.includes(id)) {
-    if (gameState.gold < price) return alert("Недостаточно минералов!");
+    if (gameState.gold < price) return alert("Недостаточно руды/золота!");
     gameState.gold -= price;
     gameState.inventory.push(id);
   }
