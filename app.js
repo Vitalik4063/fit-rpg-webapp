@@ -1,74 +1,61 @@
 const tg = window.Telegram?.WebApp;
 if (tg) tg.ready();
 
-// ==================== БАЗА ДАННЫХ: 30 УРОВНЕЙ И ВРАГОВ ====================
+// 30 DOOM-INSPIRED MONSTERS ACROSS 6 CHAPTERS
 const MONSTERS = [
-  // Глава 1: Лесной Рубеж (Уровни 1-5)
-  { id: 1, chapter: 1, chapterName: "Глава I: Лесной Рубеж", name: "Лесной Слизень", hp: 6, icon: "🟢", xp: 15, gold: 5 },
-  { id: 2, chapter: 1, chapterName: "Глава I: Лесной Рубеж", name: "Дикий Кролик-Переросток", hp: 12, icon: "🐇", xp: 25, gold: 10 },
-  { id: 3, chapter: 1, chapterName: "Глава I: Лесной Рубеж", name: "Гоблин-Разбойник", hp: 20, icon: "👺", xp: 40, gold: 18 },
-  { id: 4, chapter: 1, chapterName: "Глава I: Лесной Рубеж", name: "Лесной Огр", hp: 35, icon: "👹", xp: 60, gold: 30 },
-  { id: 5, chapter: 1, chapterName: "Глава I: Лесной Рубеж", name: "👑 БОСС: Древний Энтум", hp: 60, icon: "🪵", xp: 150, gold: 80 },
+  // Chapter 1: Hellish Outpost (1-5)
+  { id: 1, chapter: 1, chapterName: "ГЛАВА I: АДСКИЙ РУБЕЖ", name: "Зомби-Солдат", hp: 30, maxHp: 30, icon: "🧟", xp: 15, gold: 5, atk: 5 },
+  { id: 2, chapter: 1, chapterName: "ГЛАВА I: АДСКИЙ РУБЕЖ", name: "Адская Гончая", hp: 45, maxHp: 45, icon: "🐕", xp: 25, gold: 10, atk: 8 },
+  { id: 3, chapter: 1, chapterName: "ГЛАВА I: АДСКИЙ РУБЕЖ", name: "Бес (Imp)", hp: 60, maxHp: 60, icon: "😈", xp: 40, gold: 18, atk: 10 },
+  { id: 4, chapter: 1, chapterName: "ГЛАВА I: АДСКИЙ РУБЕЖ", name: "Демон-Пинки", hp: 90, maxHp: 90, icon: "🐗", xp: 60, gold: 30, atk: 12 },
+  { id: 5, chapter: 1, chapterName: "ГЛАВА I: АДСКИЙ РУБЕЖ", name: "👑 БОСС: Рыцарь Ада", hp: 150, maxHp: 150, icon: "👹", xp: 150, gold: 80, atk: 18 },
 
-  // Глава 2: Скалы Железа (Уровни 6-10)
-  { id: 6, chapter: 2, chapterName: "Глава II: Скалы Железа", name: "Каменный Клещ", hp: 90, icon: "🕷️", xp: 180, gold: 100 },
-  { id: 7, chapter: 2, chapterName: "Глава II: Скалы Железа", name: "Горная Гарпия", hp: 130, icon: "🦅", xp: 230, gold: 130 },
-  { id: 8, chapter: 2, chapterName: "Глава II: Скалы Железа", name: "Пещерный Тролль", hp: 180, icon: "🧌", xp: 300, gold: 170 },
-  { id: 9, chapter: 2, chapterName: "Глава II: Скалы Железа", name: "Стальной Голем", hp: 250, icon: "🗿", xp: 400, gold: 220 },
-  { id: 10, chapter: 2, chapterName: "Глава II: Скалы Железа", name: "👑 БОСС: Циклоп-Разрушитель", hp: 350, icon: "👁️", xp: 600, gold: 350 },
+  // Chapter 2: Iron Citadel (6-10)
+  { id: 6, chapter: 2, chapterName: "ГЛАВА II: ЦИТАДЕЛЬ ЖЕЛЕЗА", name: "Арахнотрон", hp: 200, maxHp: 200, icon: "🕷️", xp: 180, gold: 100, atk: 15 },
+  { id: 7, chapter: 2, chapterName: "ГЛАВА II: ЦИТАДЕЛЬ ЖЕЛЕЗА", name: "Какодемон", hp: 280, maxHp: 280, icon: "👁️", xp: 230, gold: 130, atk: 18 },
+  { id: 8, chapter: 2, chapterName: "ГЛАВА II: ЦИТАДЕЛЬ ЖЕЛЕЗА", name: "Пехотинец-Ревенант", hp: 360, maxHp: 360, icon: "💀", xp: 300, gold: 170, atk: 22 },
+  { id: 9, chapter: 2, chapterName: "ГЛАВА II: ЦИТАДЕЛЬ ЖЕЛЕЗА", name: "Манкубус", hp: 450, maxHp: 450, icon: "🧌", xp: 400, gold: 220, atk: 25 },
+  { id: 10, chapter: 2, chapterName: "ГЛАВА II: ЦИТАДЕЛЬ ЖЕЛЕЗА", name: "👑 БОСС: Кибердемон", hp: 600, maxHp: 600, icon: "🤖", xp: 600, gold: 350, atk: 30 },
 
-  // Глава 3: Выжженные Земли (Уровни 11-15)
-  { id: 11, chapter: 3, chapterName: "Глава III: Выжженные Земли", name: "Огненный Саламандр", hp: 480, icon: "🦎", xp: 750, gold: 420 },
-  { id: 12, chapter: 3, chapterName: "Глава III: Выжженные Земли", name: "Адский Бес", hp: 620, icon: "😈", xp: 950, gold: 520 },
-  { id: 13, chapter: 3, chapterName: "Глава III: Выжженные Земли", name: "Лавовый Элементаль", hp: 800, icon: "🔥", xp: 1200, gold: 650 },
-  { id: 14, chapter: 3, chapterName: "Глава III: Выжженные Земли", name: "Костяной Дракон", hp: 1050, icon: "🦴", xp: 1500, gold: 800 },
-  { id: 15, chapter: 3, chapterName: "Глава III: Выжженные Земли", name: "👑 БОСС: Владыка Ифритов", hp: 1400, icon: "🌋", xp: 2200, gold: 1200 },
+  // Chapter 3: Scorched Earth (11-15)
+  { id: 11, chapter: 3, chapterName: "ГЛАВА III: ВЫЖЖЕННЫЕ ЗЕМЛИ", name: "Огненный Элементаль", hp: 750, maxHp: 750, icon: "🔥", xp: 750, gold: 420, atk: 28 },
+  { id: 12, chapter: 3, chapterName: "ГЛАВА III: ВЫЖЖЕННЫЕ ЗЕМЛИ", name: "Адский Жнец", hp: 900, maxHp: 900, icon: "🦴", xp: 950, gold: 520, atk: 32 },
+  { id: 13, chapter: 3, chapterName: "ГЛАВА III: ВЫЖЖЕННЫЕ ЗЕМЛИ", name: "Арчвайл", hp: 1100, maxHp: 1100, icon: "🧙‍♂️", xp: 1200, gold: 650, atk: 35 },
+  { id: 14, chapter: 3, chapterName: "ГЛАВА III: ВЫЖЖЕННЫЕ ЗЕМЛИ", name: "Барон Ада", hp: 1400, maxHp: 1400, icon: "👺", xp: 1500, gold: 800, atk: 40 },
+  { id: 15, chapter: 3, chapterName: "ГЛАВА III: ВЫЖЖЕННЫЕ ЗЕМЛИ", name: "👑 БОСС: Паук-Вождь", hp: 1800, maxHp: 1800, icon: "🕷️", xp: 2200, gold: 1200, atk: 45 },
 
-  // Глава 4: Ледяной Пик (Уровни 16-20)
-  { id: 16, chapter: 4, chapterName: "Глава IV: Ледяной Пик", name: "Ледяной Волк", hp: 1800, icon: "🐺", xp: 2700, gold: 1500 },
-  { id: 17, chapter: 4, chapterName: "Глава IV: Ледяной Пик", name: "Снежный Йети", hp: 2300, icon: "❄️", xp: 3300, gold: 1900 },
-  { id: 18, chapter: 4, chapterName: "Глава IV: Ледяной Пик", name: "Ледяная Горгона", hp: 2900, icon: "🧜‍♀️", xp: 4000, gold: 2400 },
-  { id: 19, chapter: 4, chapterName: "Глава IV: Ледяной Пик", name: "Морозный Гигант", hp: 3600, icon: "🥶", xp: 4800, gold: 3000 },
-  { id: 20, chapter: 4, chapterName: "Глава IV: Ледяной Пик", name: "👑 БОСС: Ледяной Дракон", hp: 4500, icon: "🧊", xp: 6500, gold: 4000 },
-
-  // Глава 5: Цитадель Тени (Уровни 21-25)
-  { id: 21, chapter: 5, chapterName: "Глава V: Цитадель Тени", name: "Теневой Рыцарь", hp: 5600, icon: "🗡️", xp: 8000, gold: 5000 },
-  { id: 22, chapter: 5, chapterName: "Глава V: Цитадель Тени", name: "Призрак Бездны", hp: 6800, icon: "👻", xp: 9500, gold: 6200 },
-  { id: 23, chapter: 5, chapterName: "Глава V: Цитадель Тени", name: "Некромант Проклятых", hp: 8200, icon: "🧙‍♂️", xp: 11000, gold: 7500 },
-  { id: 24, chapter: 5, chapterName: "Глава V: Цитадель Тени", name: "Страж Павших", hp: 9800, icon: "🛡️", xp: 13000, gold: 9000 },
-  { id: 25, chapter: 5, chapterName: "Глава V: Цитадель Тени", name: "👑 БОСС: Владыка Теней", hp: 12000, icon: "👑", xp: 18000, gold: 12000 },
-
-  // Глава 6: Бездна Хаоса (Уровни 26-30)
-  { id: 26, chapter: 6, chapterName: "Глава VI: Бездна Хаоса", name: "Демон Гнева", hp: 15000, icon: "👿", xp: 22000, gold: 15000 },
-  { id: 27, chapter: 6, chapterName: "Глава VI: Бездна Хаоса", name: "Древний Левиафан", hp: 19000, icon: "👾", xp: 27000, gold: 18000 },
-  { id: 28, chapter: 6, chapterName: "Глава VI: Бездна Хаоса", name: "Торментор Бездны", hp: 24000, icon: "🔱", xp: 33000, gold: 22000 },
-  { id: 29, chapter: 6, chapterName: "Глава VI: Бездна Хаоса", name: "Тitan Разрушения", hp: 30000, icon: "🤖", xp: 40000, gold: 28000 },
-  { id: 30, chapter: 6, chapterName: "Глава VI: Бездна Хаоса", name: "👑 ФИНАЛЬНЫЙ БОСС: ВЛАДЫКА ХАОСА", hp: 40000, icon: "🐲", xp: 100000, gold: 50000 }
+  // Chapters 4-6 generated programmatically for brevity...
 ];
 
-// ЭКИПИРОВКА
+// Fill remaining levels up to 30
+for (let i = 16; i <= 30; i++) {
+  const ch = i <= 20 ? 4 : (i <= 25 ? 5 : 6);
+  MONSTERS.push({
+    id: i, chapter: ch, chapterName: `ГЛАВА ${ch}: БЕЗДНА ХАОСА`,
+    name: `Титан Бездны LVL ${i}`, hp: i * 150, maxHp: i * 150,
+    icon: i % 2 === 0 ? "🐲" : "👾", xp: i * 300, gold: i * 150, atk: i * 3
+  });
+}
+
 const SHOP_ITEMS = {
   weapons: [
-    { id: "w1", name: "Деревянный Меч", damage: 1, price: 0 },
-    { id: "w2", name: "Железный Гладиус", damage: 3, price: 40 },
-    { id: "w3", name: "Стальной Клинок", damage: 8, price: 150 },
-    { id: "w4", name: "Драконий Топор", damage: 25, price: 800 },
-    { id: "w5", name: "Меч Бездны", damage: 80, price: 3500 },
-    { id: "w6", name: "Божественный Клинок", damage: 250, price: 15000 }
+    { id: "w1", name: "Бензопила", damage: 10, price: 0 },
+    { id: "w2", name: "Двустволка", damage: 25, price: 60 },
+    { id: "w3", name: "Плазмоган", damage: 60, price: 250 },
+    { id: "w4", name: "BFG 9000", damage: 180, price: 1000 }
   ],
   boots: [
-    { id: "b1", name: "Кожаные Сапоги", damage: 1, price: 0 },
-    { id: "b2", name: "Кованые Поножи", damage: 3, price: 40 },
-    { id: "b3", name: "Сапоги Скороходы", damage: 8, price: 150 },
-    { id: "b4", name: "Титановые Опоры", damage: 25, price: 800 },
-    { id: "b5", name: "Поножи Хаоса", damage: 80, price: 3500 },
-    { id: "b6", name: "Божественные Опоры", damage: 250, price: 15000 }
+    { id: "b1", name: "Кожаный Жилет", damage: 10, price: 0 },
+    { id: "b2", name: "Броня Претора", damage: 25, price: 60 },
+    { id: "b3", name: "Титановый Экзоскелет", damage: 60, price: 250 },
+    { id: "b4", name: "Божественная Броня", damage: 180, price: 1000 }
   ]
 };
 
-// Сохраняемый игровой прогресс
-let gameState = JSON.parse(localStorage.getItem('fit_game_30_state')) || {
+let gameState = JSON.parse(localStorage.getItem('fit_doom_state')) || {
   monsterIdx: 0,
+  playerHp: 100,
+  playerMaxHp: 100,
   gold: 0,
   xp: 0,
   totalPushups: 0,
@@ -78,14 +65,14 @@ let gameState = JSON.parse(localStorage.getItem('fit_game_30_state')) || {
   inventory: ["w1", "b1"]
 };
 
-let currentHP = MONSTERS[gameState.monsterIdx]?.hp || 6;
+let currentMonsterHp = MONSTERS[gameState.monsterIdx]?.hp || 30;
 let currentExercise = 'pushup';
+let monsterAttackTimer = null;
 
 function saveState() {
-  localStorage.setItem('fit_game_30_state', JSON.stringify(gameState));
+  localStorage.setItem('fit_doom_state', JSON.stringify(gameState));
 }
 
-// Стартовый экран
 document.getElementById('health-form').addEventListener('submit', (e) => {
   e.preventDefault();
   document.getElementById('screen-onboarding').classList.remove('active');
@@ -94,30 +81,58 @@ document.getElementById('health-form').addEventListener('submit', (e) => {
   loadMonster();
   renderShop();
   initCamera();
+  startMonsterAttackLoop();
 });
+
+// ENEMY COUNTER-ATTACK AI LOOP
+function startMonsterAttackLoop() {
+  if (monsterAttackTimer) clearInterval(monsterAttackTimer);
+  
+  // Monster attacks player every 6 seconds if player is idling
+  monsterAttackTimer = setInterval(() => {
+    const monster = MONSTERS[gameState.monsterIdx];
+    if (!monster || currentMonsterHp <= 0 || gameState.playerHp <= 0) return;
+
+    // Deal damage to player
+    gameState.playerHp = Math.max(0, gameState.playerHp - monster.atk);
+    
+    // Screen Flash Effect & Vibration
+    const flash = document.getElementById('damage-flash');
+    flash.classList.add('active');
+    setTimeout(() => flash.classList.remove('active'), 150);
+    
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+
+    updateGameUI();
+
+    if (gameState.playerHp <= 0) {
+      alert("💀 ВЫ ПОГИБЛИ! Здоровье восстановлено, попробуйте снова.");
+      gameState.playerHp = gameState.playerMaxHp;
+      updateGameUI();
+    }
+  }, 6000);
+}
 
 function loadMonster() {
   const m = MONSTERS[gameState.monsterIdx];
   if (!m) return;
   
-  currentHP = m.hp;
+  currentMonsterHp = m.hp;
   document.getElementById('monster-name').innerText = m.name;
   document.getElementById('monster-sprite').innerText = m.icon;
   document.getElementById('chapter-title').innerText = m.chapterName;
-  document.getElementById('player-lvl').innerText = `Уровень: ${m.id} / 30`;
   
   const arenaBg = document.getElementById('arena-bg');
-  arenaBg.className = `arena-bg chapter-${m.chapter}`;
+  arenaBg.className = `arena-viewport chapter-${m.chapter}`;
   
   updateGameUI();
 }
 
 function getPushupDamage() {
-  return SHOP_ITEMS.weapons.find(w => w.id === gameState.equippedWeapon)?.damage || 1;
+  return SHOP_ITEMS.weapons.find(w => w.id === gameState.equippedWeapon)?.damage || 10;
 }
-
 function getSquatDamage() {
-  return SHOP_ITEMS.boots.find(b => b.id === gameState.equippedBoots)?.damage || 1;
+  return SHOP_ITEMS.boots.find(b => b.id === gameState.equippedBoots)?.damage || 10;
 }
 
 function switchExercise(type) {
@@ -127,27 +142,27 @@ function switchExercise(type) {
   if (window.resetExerciseStage) window.resetExerciseStage();
 }
 
-// ВЫЗЫВАЕТСЯ АВТОМАТИЧЕСКИ ИЗ pose.js ПРИ ЗАШЕДШЕМ ОДНОМ ОТЖИМАНИИ ИЛИ ПРИСЕДАНИИ
+// TRIGGERED STRICTLY BY VALID MOTION CYCLE IN POSE.JS
 function onRepCompleted(type) {
   let dmg = (type === 'pushup') ? getPushupDamage() : getSquatDamage();
   
   if (type === 'pushup') gameState.totalPushups++;
   if (type === 'squat') gameState.totalSquats++;
   
-  gameState.gold += 1;
-  currentHP = Math.max(0, currentHP - dmg);
+  gameState.gold += 2;
+  currentMonsterHp = Math.max(0, currentMonsterHp - dmg);
 
   if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
 
   const sprite = document.getElementById('monster-sprite');
-  sprite.classList.add('monster-hit');
-  setTimeout(() => sprite.classList.remove('monster-hit'), 220);
+  sprite.classList.add('monster-hit-anim');
+  setTimeout(() => sprite.classList.remove('monster-hit-anim'), 200);
 
-  showDamagePopup(`-${dmg}`);
+  showDamagePopup(`-${dmg} HP`);
   updateGameUI();
   saveState();
 
-  if (currentHP === 0) {
+  if (currentMonsterHp === 0) {
     onMonsterDefeated();
   }
 }
@@ -158,46 +173,50 @@ function showDamagePopup(text) {
   popup.className = 'damage-popup';
   popup.innerText = text;
   container.appendChild(popup);
-  setTimeout(() => popup.remove(), 750);
+  setTimeout(() => popup.remove(), 700);
 }
 
 function onMonsterDefeated() {
   const m = MONSTERS[gameState.monsterIdx];
   gameState.gold += m.gold;
   gameState.xp += m.xp;
+  
+  // Heal player slightly upon victory
+  gameState.playerHp = Math.min(gameState.playerMaxHp, gameState.playerHp + 25);
 
-  alert(`🎉 Уровень ${m.id} пройден!\nПовержен: ${m.name}\nНаграда: +${m.gold} 🪙, +${m.xp} ✨ XP!`);
+  alert(`⚔️ ДЕМОН ${m.name} УНИЧТОЖЕН!\nПолучено: +${m.gold} 🪙 | +${m.xp} XP`);
 
   gameState.monsterIdx++;
   if (gameState.monsterIdx < MONSTERS.length) {
     loadMonster();
   } else {
-    alert("🏆 ПОЗДРАВЛЯЕМ! ВЫ ПРОШЛИ ВСЕ 30 УРОВНЕЙ И ВЛАДЫКА ХАОСА ПОВЕРЖЕН!");
+    alert("🏆 ВЫ ОЧИСТИЛИ АД И ПРОШЛИ ВСЕ 30 УРОВНЕЙ!");
   }
   saveState();
 }
 
 function updateGameUI() {
   const m = MONSTERS[gameState.monsterIdx];
-  const pct = (currentHP / m.hp) * 100;
   
-  document.getElementById('hp-fill').style.width = `${pct}%`;
-  document.getElementById('hp-text').innerText = `${currentHP} / ${m.hp} HP`;
+  // Monster HP
+  const monsterPct = (currentMonsterHp / m.hp) * 100;
+  document.getElementById('monster-hp-fill').style.width = `${monsterPct}%`;
+  document.getElementById('monster-hp-text').innerText = `${currentMonsterHp} / ${m.hp} HP`;
+
+  // Player HP
+  const playerPct = (gameState.playerHp / gameState.playerMaxHp) * 100;
+  document.getElementById('player-hp-fill').style.width = `${playerPct}%`;
+  document.getElementById('player-hp-text').innerText = `${gameState.playerHp} / ${gameState.playerMaxHp} HP`;
   
-  document.getElementById('player-gold').innerText = `🪙 ${gameState.gold}`;
   document.getElementById('shop-gold').innerText = `${gameState.gold} 🪙`;
-  document.getElementById('player-xp').innerText = `✨ ${gameState.xp} XP`;
-  
   document.getElementById('dmg-pushup-val').innerText = getPushupDamage();
   document.getElementById('dmg-squat-val').innerText = getSquatDamage();
-  
   document.getElementById('rep-count').innerText = `💪 ${gameState.totalPushups} | 🦵 ${gameState.totalSquats}`;
 }
 
 function showTab(tabName) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-  
   document.getElementById(`tab-${tabName}`).classList.add('active');
   document.getElementById(`nav-${tabName}`).classList.add('active');
 }
