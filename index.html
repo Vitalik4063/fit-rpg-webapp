@@ -72,25 +72,16 @@
         </div>
       </div>
 
-      <!-- КРУПНЫЕ ПОЛОСКИ ЗДОРОВЬЯ СНИЗУ -->
-      <div class="fantasy-hud-bottom">
-        <div class="hud-card player-hud" id="player-hud-card">
-          <div class="hud-title glow-text">🗡️ ВАШЕ ЗДОРОВЬЕ</div>
-          <div class="bar-outer">
-            <div id="player-hp-fill" class="bar-inner player-hp" style="width: 100%;"></div>
-            <span id="player-hp-text">100 / 100 HP</span>
-          </div>
-        </div>
-
-        <div class="hud-card enemy-hud">
-          <div class="hud-title glow-text" id="monster-name">ТВАРЬ БЕЗДНЫ</div>
-          <div class="bar-outer">
-            <div id="monster-hp-fill" class="bar-inner enemy-hp" style="width: 100%;"></div>
-            <span id="monster-hp-text">50 / 50 HP</span>
-          </div>
+      <!-- ХП Врага расположено сразу под его окном -->
+      <div class="hud-card enemy-hud" style="margin: 8px 0; border: 1px solid var(--blood); box-shadow: inset 0 0 10px rgba(145,0,0,0.5);">
+        <div class="hud-title glow-text" id="monster-name" style="font-size: 13px;">ТВАРЬ БЕЗДНЫ</div>
+        <div class="bar-outer" style="height: 20px;">
+          <div id="monster-hp-fill" class="bar-inner enemy-hp" style="width: 100%;"></div>
+          <span id="monster-hp-text" style="line-height: 20px; font-size: 12px;">50 / 50 HP</span>
         </div>
       </div>
 
+      <!-- Выбор упражнений -->
       <div class="exercise-selector">
         <button id="btn-pushup" class="btn-ex active" onclick="switchExercise('pushup')">
           ⚔️ УДАР (<span id="dmg-pushup-val">10</span> DMG)
@@ -105,6 +96,15 @@
       <div class="camera-wrapper">
         <video id="webcam" autoplay muted playsinline style="display:none;"></video>
         <canvas id="canvas"></canvas>
+
+        <!-- ВАШИ ХП (Теперь внутри камеры слева внизу) -->
+        <div class="player-hp-camera-overlay">
+          <div class="hud-title glow-text" style="text-align: left; margin-bottom: 4px; font-size: 11px;">🗡️ ВАШЕ ЗДОРОВЬЕ</div>
+          <div class="bar-outer" style="height: 16px;">
+            <div id="player-hp-fill" class="bar-inner player-hp" style="width: 100%;"></div>
+            <span id="player-hp-text" style="line-height: 16px; font-size: 11px;">100 / 100 HP</span>
+          </div>
+        </div>
 
         <div class="angle-hud-overlay">
           <div class="angle-label">УГОЛ СУСТАВА</div>
@@ -130,15 +130,15 @@
         <h2 class="section-title">БЕЗОПАСНЫЙ ЛАГЕРЬ</h2>
         <p class="camp-flavor">Пламя костра согревает тело. Здоровье восстанавливается автоматически.</p>
 
-        <div class="hud-card player-hud camp-hp-card" id="camp-hp-card">
+        <div class="hud-card player-hud camp-hp-card" id="camp-hp-card" style="width: 100%;">
           <div class="hud-title glow-text">❤️ ВАШЕ ЗДОРОВЬЕ</div>
-          <div class="bar-outer">
+          <div class="bar-outer" style="height: 22px;">
             <div id="camp-hp-fill" class="bar-inner player-hp" style="width:100%;"></div>
-            <span id="camp-hp-text">100 / 100 HP</span>
+            <span id="camp-hp-text" style="font-size: 13px; line-height: 20px;">100 / 100 HP</span>
           </div>
         </div>
 
-        <div class="camp-stats-grid">
+        <div class="camp-stats-grid" style="width: 100%;">
           <div class="camp-stat"><span class="camp-stat-label">Глава</span><span id="camp-chapter" class="camp-stat-val">I / X</span></div>
           <div class="camp-stat"><span class="camp-stat-label">Уровень</span><span id="camp-level" class="camp-stat-val">1 / 50</span></div>
           <div class="camp-stat"><span class="camp-stat-label">Золото</span><span id="camp-gold" class="camp-stat-val">0 💎</span></div>
@@ -147,11 +147,11 @@
 
         <button id="btn-return-battle" class="fantasy-btn glow-btn pulse-anim" onclick="showTab('arena')">⚔️ ВЕРНУТЬСЯ В БОЙ</button>
         
-        <div id="camp-victory-panel" class="camp-victory-panel" style="display:none;">
+        <div id="camp-victory-panel" class="camp-victory-panel" style="display:none; width: 100%;">
           <button type="button" id="btn-new-game-plus" class="fantasy-btn glow-btn">🔄 НОВАЯ ИГРА+</button>
         </div>
 
-        <button type="button" id="btn-full-reset" class="fantasy-btn danger-btn" style="margin-top: 30px;">Сбросить весь прогресс</button>
+        <button type="button" id="btn-full-reset" class="fantasy-btn danger-btn" style="margin-top: 30px; width: 90%;">Сбросить весь прогресс</button>
       </div>
     </div>
 
@@ -175,6 +175,7 @@
     <!-- ДОСТИЖЕНИЯ -->
     <div id="tab-achievements" class="tab-content">
       <h2 class="section-title">🏆 ТРОФЕИ И ВЕЛИЧИЕ</h2>
+      <p style="text-align:center; font-size:11px; color:#888; margin-bottom:10px;">(Нажмите на трофей, чтобы узнать как его получить)</p>
       <div id="achievements-list" class="achievements-grid"></div>
     </div>
 
