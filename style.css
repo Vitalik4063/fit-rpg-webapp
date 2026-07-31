@@ -121,36 +121,42 @@ label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 
 }
 .fantasy-select:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
 
-/* КНОПКИ */
+/* ПРЕКРАСНЫЕ КНОПКИ */
 .fantasy-btn {
   width: 100%; padding: 16px;
   background: linear-gradient(180deg, #9a1c22 0%, #4a0b0d 100%);
-  border: 1px solid var(--gold-bright); color: var(--gold-bright);
+  border: 2px solid var(--gold);
+  color: var(--gold-bright);
   font-weight: 900; font-size: 16px; cursor: pointer; border-radius: 8px;
   font-family: 'Cinzel', serif; letter-spacing: 1px;
   text-shadow: 0 2px 5px rgba(0,0,0,0.9);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 5px 15px rgba(0,0,0,0.6);
+  box-shadow: inset 0 0 10px rgba(255, 239, 159, 0.2), 0 5px 15px rgba(0, 0, 0, 0.8);
   transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.fantasy-btn:hover {
+  box-shadow: inset 0 0 20px rgba(255, 239, 159, 0.5), 0 0 25px rgba(240, 42, 42, 0.8);
 }
 .fantasy-btn:active { transform: scale(0.95) translateY(2px); box-shadow: 0 2px 5px rgba(0,0,0,0.8); }
 .glow-btn { animation: pulseGlow 2.5s infinite; }
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 15px rgba(154, 28, 34, 0.6); }
-  50% { box-shadow: 0 0 30px rgba(240, 42, 42, 0.9); border-color: #fff; }
+  0%, 100% { box-shadow: inset 0 0 10px rgba(255,239,159,0.2), 0 0 15px rgba(154, 28, 34, 0.6); }
+  50% { box-shadow: inset 0 0 10px rgba(255,239,159,0.2), 0 0 30px rgba(240, 42, 42, 0.9); border-color: #fff; }
 }
 
 .danger-btn {
   background: linear-gradient(180deg, #400, #100); border-color: #800; color: #a55; margin-top: 15px; font-size: 13px;
 }
 
-/* БАРЫ ЗДОРОВЬЯ */
-.fantasy-hud-top { display: flex; gap: 8px; margin-bottom: 10px; }
-.hud-card { padding: 8px; }
-.hud-title { font-size: 11px; color: var(--gold-bright); margin-bottom: 5px; letter-spacing: 1px; text-align: center; }
+/* БОЛЬШИЕ БАРЫ ЗДОРОВЬЯ СНИЗУ */
+.fantasy-hud-bottom { 
+  display: flex; flex-direction: column; gap: 12px; margin: 15px 0; 
+}
+.hud-card { padding: 12px; border: 2px solid var(--border-wine); }
+.hud-title { font-size: 15px; color: var(--gold-bright); margin-bottom: 8px; letter-spacing: 1px; text-align: center; }
 
 .bar-outer {
-  position: relative; width: 100%; height: 18px; background: #000;
-  border: 1px solid #4a0b0d; border-radius: 4px; overflow: hidden; box-shadow: inset 0 4px 8px rgba(0,0,0,0.9);
+  position: relative; width: 100%; height: 28px; background: #000;
+  border: 2px solid var(--gold); border-radius: 6px; overflow: hidden; box-shadow: inset 0 4px 8px rgba(0,0,0,0.9), 0 0 10px #000;
 }
 .bar-inner { height: 100%; transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .bar-inner.player-hp { background: linear-gradient(90deg, #1b7a3a, #39e079, #1b7a3a); background-size: 200% 100%; animation: hpFlow 2s linear infinite; }
@@ -158,7 +164,7 @@ label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 
 @keyframes hpFlow { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
 
 .bar-outer span {
-  position: absolute; inset: 0; text-align: center; font-size: 11px; font-weight: bold; color: #fff; text-shadow: 1px 1px 3px #000; line-height: 18px;
+  position: absolute; inset: 0; text-align: center; font-size: 15px; font-weight: 900; color: #fff; text-shadow: 2px 2px 4px #000; line-height: 26px;
 }
 
 /* АРЕНА И ВРАГИ */
@@ -254,6 +260,14 @@ label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 
 .btn-buy:disabled { background: #222; border-color: #555; color: #888; box-shadow: none; }
 .btn-buy:active:not(:disabled) { transform: scale(0.92); }
 
+/* ИСПРАВЛЕНИЕ ИКОНОК ТРОФЕЕВ (Чтобы не обрезались эмодзи) */
+.trophy-icon-frame {
+  width: 55px; height: 55px; font-size: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+  overflow: hidden;
+}
+
 .achievements-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
 .achieve-card { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px; }
 .achieve-card.unlocked { border-color: var(--gold-bright); background: rgba(212,175,55,0.1); }
@@ -262,21 +276,30 @@ label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 
 .ach-progress-fill { height: 100%; background: var(--gold-bright); transition: width 0.4s ease; }
 .btn-claim { margin-top: 6px; font-size: 11px; font-weight: bold; padding: 8px 12px; background: var(--emerald-dark); border: 1px solid var(--emerald); color: #fff; border-radius: 6px; cursor: pointer; font-family: inherit; box-shadow: 0 0 10px rgba(57,224,121,0.4); animation: pulseGlow 2s infinite;}
 
-/* КРУПНОЕ ПРЕКРАСНОЕ МЕНЮ */
+/* КРУПНОЕ ПРЕКРАСНОЕ МЕНЮ (С ПОДСВЕТКОЙ ПРИ ПЕРЕХОДЕ) */
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0; height: 85px;
-  background: linear-gradient(180deg, rgba(22,8,11,0.95), rgba(5,1,2,0.98));
+  background: linear-gradient(180deg, rgba(22,8,11,0.98), rgba(5,1,2,1));
   border-top: 2px solid var(--border-wine); display: flex; justify-content: space-around; align-items: center; z-index: 100;
   box-shadow: 0 -5px 25px rgba(0,0,0,0.9);
   padding-bottom: env(safe-area-inset-bottom);
 }
 .nav-btn {
   background: none; border: none; color: #777; cursor: pointer; font-family: inherit;
-  display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; transition: 0.3s;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; height: 100%; justify-content: center;
+  transition: 0.3s; position: relative; overflow: hidden;
 }
 .nav-icon { font-size: 26px; transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); filter: grayscale(100%); }
 .nav-text { font-size: 11px; font-weight: 900; letter-spacing: 0.5px; }
 
+/* Активная подсветка */
+.nav-btn.active {
+  background: radial-gradient(ellipse at bottom, rgba(212, 175, 55, 0.25) 0%, transparent 70%);
+}
+.nav-btn.active::after {
+  content: ''; position: absolute; bottom: 0; left: 10%; width: 80%; height: 4px;
+  background: var(--gold-bright); border-radius: 4px 4px 0 0; box-shadow: 0 0 15px var(--gold-bright);
+}
 .nav-btn.active .nav-icon { transform: translateY(-5px) scale(1.2); filter: grayscale(0%); drop-shadow: 0 0 10px var(--gold); }
 .nav-btn.active .nav-text { color: var(--gold-bright); text-shadow: 0 0 8px var(--gold); }
 
