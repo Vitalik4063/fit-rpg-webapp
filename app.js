@@ -1,22 +1,28 @@
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 
+// Защита экрана от выключения
 let wakeLock = null;
 async function requestWakeLock() { try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch (err) {} }
+
 document.addEventListener('visibilitychange', async () => {
   if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
-  if (document.visibilityState === 'visible' && window.__arenaActive) {
-    if (window.__activeCamera) window.__activeCamera.start(); else if (typeof initCamera === 'function') initCamera();
+  
+  if (document.visibilityState === 'visible') {
+    if (window.__arenaActive && typeof restartCamera === 'function') restartCamera();
+  } else {
+    if (typeof stopCamera === 'function') stopCamera();
   }
 });
 
 function toRomanNum(n) { return ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][n] || String(n); }
 
 const CHAPTERS = [
-  { num: 1, name: "Шепчущий Лес" }, { num: 2, name: "Затопленные Пещеры" }, { num: 3, name: "Руины Храма" }, 
-  { num: 4, name: "Ледяные Пустоши" }, { num: 5, name: "Огненные Шахты" }, { num: 6, name: "Сердце Бездны" },
-  { num: 7, name: "Царство Пустоты" }, { num: 8, name: "Кладбище Богов" }, { num: 9, name: "Измерение Хаоса" }, 
-  { num: 10, name: "Конец Времен" }
+  { num: 1, name: "Шепчущий Лес", cls: "chapter-1" }, { num: 2, name: "Затопленные Пещеры", cls: "chapter-2" },
+  { num: 3, name: "Руины Храма", cls: "chapter-3" }, { num: 4, name: "Ледяные Пустоши", cls: "chapter-4" },
+  { num: 5, name: "Огненные Шахты", cls: "chapter-5" }, { num: 6, name: "Сердце Бездны", cls: "chapter-6" },
+  { num: 7, name: "Царство Пустоты", cls: "chapter-7" }, { num: 8, name: "Кладбище Богов", cls: "chapter-8" },
+  { num: 9, name: "Измерение Хаоса", cls: "chapter-9" }, { num: 10, name: "Конец Времен", cls: "chapter-10" }
 ];
 
 const MONSTERS_RAW = [];
@@ -47,57 +53,58 @@ for(let i=0; i<10; i++) {
 }
 const MONSTERS = MONSTERS_RAW.map((m, idx) => ({
   id: idx + 1, chapter: m.chapter, chapterName: `ВРАТА ${toRomanNum(m.chapter)} · ${CHAPTERS[m.chapter - 1].name.toUpperCase()}`,
+  chapterCls: CHAPTERS[m.chapter - 1].cls,
   name: m.isBoss ? `👑 БОСС: ${m.name}` : `${m.name} · ${idx+1}/50`, baseName: m.name,
   hp: m.hp, maxHp: m.hp, icon: m.icon, gold: m.gold, atk: m.atk, isBoss: !!m.isBoss
 }));
 
 const SHOP_ITEMS = {
-  armors: [
+  armors: [ // Увеличивают МАКСИМАЛЬНОЕ HP
     { id: "a1", name: "Рваная Накидка", hp: 0, price: 0, icon: "🧥", rarity: "common" },
     { id: "a2", name: "Кольчуга Тьмы", hp: 50, price: 100, icon: "👕", rarity: "rare" },
     { id: "a3", name: "Стальной Нагрудник", hp: 200, price: 500, icon: "🦺", rarity: "epic" },
     { id: "a4", name: "Панцирь Дракона", hp: 1000, price: 4000, icon: "🐉", rarity: "legendary" },
     { id: "a5", name: "Доспех Титана", hp: 5000, price: 25000, icon: "🗿", rarity: "mythic" },
     { id: "a6", name: "Эгида Богов", hp: 50000, price: 200000, icon: "🛡️", rarity: "divine" },
-    { id: "a7", name: "Рудный Панцирь", hp: 150000, price: 900000, icon: "<img src='assets/minerals/Icons_01.png' style='width:90%; height:90%; object-fit:contain;'>", rarity: "divine" }
+    { id: "a7", name: "Рудный Панцирь", hp: 150000, price: 900000, icon: "<img src='assets/minerals/Icons_01.png' style='width:100%; height:100%; object-fit:contain;'>", rarity: "divine" }
   ],
-  weapons: [
+  weapons: [ // Урон от ОТЖИМАНИЙ
     { id: "w1", name: "Ржавый Меч", damage: 10, price: 0, icon: "🗡️", rarity: "common" },
     { id: "w2", name: "Рубиновый Клинок", damage: 30, price: 60, icon: "♦️", rarity: "rare" },
     { id: "w3", name: "Изумрудный Топор", damage: 150, price: 400, icon: "❇️", rarity: "epic" },
     { id: "w4", name: "Алмазный Секач", damage: 800, price: 3000, icon: "💎", rarity: "legendary" },
     { id: "w5", name: "Раскалыватель", damage: 4000, price: 20000, icon: "🌋", rarity: "mythic" },
     { id: "w6", name: "Коса Смерти", damage: 25000, price: 150000, icon: "🪓", rarity: "divine" },
-    { id: "w7", name: "Коготь Гоблина", damage: 100000, price: 900000, icon: "<img src='assets/goblins/Icons_01.png' style='width:90%; height:90%; object-fit:contain;'>", rarity: "divine" }
+    { id: "w7", name: "Коготь Гоблина", damage: 100000, price: 900000, icon: "<img src='assets/goblins/Icons_01.png' style='width:100%; height:100%; object-fit:contain;'>", rarity: "divine" }
   ],
-  boots: [
+  boots: [ // Урон от ПРИСЕДАНИЙ
     { id: "b1", name: "Старые Сапоги", damage: 10, price: 0, icon: "🥾", rarity: "common" },
     { id: "b2", name: "Тяжелые Поножи", damage: 30, price: 60, icon: "⚙️", rarity: "rare" },
     { id: "b3", name: "Мифриловые Поножи", damage: 150, price: 400, icon: "🌟", rarity: "epic" },
     { id: "b4", name: "Шаги Землетрясения", damage: 800, price: 3000, icon: "🌍", rarity: "legendary" },
     { id: "b5", name: "Ледяные Сапоги", damage: 4000, price: 20000, icon: "❄️", rarity: "mythic" },
     { id: "b6", name: "Поступь Хаоса", damage: 25000, price: 150000, icon: "🌌", rarity: "divine" },
-    { id: "b7", name: "Шахтёрские Сапоги", damage: 100000, price: 900000, icon: "<img src='assets/mine/Icons_01.png' style='width:90%; height:90%; object-fit:contain;'>", rarity: "divine" }
+    { id: "b7", name: "Шахтёрские Сапоги", damage: 100000, price: 900000, icon: "<img src='assets/mine/Icons_01.png' style='width:100%; height:100%; object-fit:contain;'>", rarity: "divine" }
   ]
 };
 
 const ACHIEVEMENTS = [
-  { id: "a1", name: "Первая Кровь", desc: "1 отжимание в бою", type: "pushups", target: 1, reward: 10, icon: "🩸" },
-  { id: "a2", name: "Стальные Руки", desc: "50 отжиманий", type: "pushups", target: 50, reward: 50, icon: "💪" },
-  { id: "a3", name: "Сотня Ударов", desc: "100 отжиманий", type: "pushups", target: 100, reward: 100, icon: "🥊" },
-  { id: "a4", name: "Воин", desc: "500 отжиманий", type: "pushups", target: 500, reward: 300, icon: "⚔️" },
-  { id: "a5", name: "Легенда Рук", desc: "1,000 отжиманий", type: "pushups", target: 1000, reward: 800, icon: "🏋️" },
-  { id: "a6", name: "Титан", desc: "5,000 отжиманий", type: "pushups", target: 5000, reward: 3000, icon: "🦾" },
-  { id: "a7", name: "Бог Войны", desc: "10,000 отжиманий", type: "pushups", target: 10000, reward: 8000, icon: "🌋" },
-  { id: "a8", name: "Абсолют (Руки)", desc: "50,000 отжиманий", type: "pushups", target: 50000, reward: 50000, icon: "🌌" },
-  { id: "a9", name: "Первый Шаг", desc: "1 приседание в бою", type: "squats", target: 1, reward: 10, icon: "🦵" },
-  { id: "a10", name: "Крепкие Ноги", desc: "50 приседаний", type: "squats", target: 50, reward: 50, icon: "🦿" },
-  { id: "a11", name: "Сотня Шагов", desc: "100 приседаний", type: "squats", target: 100, reward: 100, icon: "🚶" },
-  { id: "a12", name: "Скала", desc: "500 приседаний", type: "squats", target: 500, reward: 300, icon: "🪨" },
-  { id: "a13", name: "Легенда Ног", desc: "1,000 приседаний", type: "squats", target: 1000, reward: 800, icon: "⛰️" },
-  { id: "a14", name: "Землетрясение", desc: "5,000 приседаний", type: "squats", target: 5000, reward: 3000, icon: "🌍" },
-  { id: "a15", name: "Атлант", desc: "10,000 приседаний", type: "squats", target: 10000, reward: 8000, icon: "🔱" },
-  { id: "a16", name: "Абсолют (Ноги)", desc: "50,000 приседаний", type: "squats", target: 50000, reward: 50000, icon: "🌠" },
+  { id: "a1", name: "Первая Кровь", desc: "Сделайте 1 отжимание в бою", type: "pushups", target: 1, reward: 10, icon: "🩸" },
+  { id: "a2", name: "Стальные Руки", desc: "Сделайте 50 отжиманий", type: "pushups", target: 50, reward: 50, icon: "💪" },
+  { id: "a3", name: "Сотня Ударов", desc: "Сделайте 100 отжиманий", type: "pushups", target: 100, reward: 100, icon: "🥊" },
+  { id: "a4", name: "Воин", desc: "Сделайте 500 отжиманий", type: "pushups", target: 500, reward: 300, icon: "⚔️" },
+  { id: "a5", name: "Легенда Рук", desc: "Сделайте 1,000 отжиманий", type: "pushups", target: 1000, reward: 800, icon: "🏋️" },
+  { id: "a6", name: "Титан", desc: "Сделайте 5,000 отжиманий", type: "pushups", target: 5000, reward: 3000, icon: "🦾" },
+  { id: "a7", name: "Бог Войны", desc: "Сделайте 10,000 отжиманий", type: "pushups", target: 10000, reward: 8000, icon: "🌋" },
+  { id: "a8", name: "Абсолют (Руки)", desc: "Сделайте 50,000 отжиманий", type: "pushups", target: 50000, reward: 50000, icon: "🌌" },
+  { id: "a9", name: "Первый Шаг", desc: "Сделайте 1 приседание в бою", type: "squats", target: 1, reward: 10, icon: "🦵" },
+  { id: "a10", name: "Крепкие Ноги", desc: "Сделайте 50 приседаний", type: "squats", target: 50, reward: 50, icon: "🦿" },
+  { id: "a11", name: "Сотня Шагов", desc: "Сделайте 100 приседаний", type: "squats", target: 100, reward: 100, icon: "🚶" },
+  { id: "a12", name: "Скала", desc: "Сделайте 500 приседаний", type: "squats", target: 500, reward: 300, icon: "🪨" },
+  { id: "a13", name: "Легенда Ног", desc: "Сделайте 1,000 приседаний", type: "squats", target: 1000, reward: 800, icon: "⛰️" },
+  { id: "a14", name: "Землетрясение", desc: "Сделайте 5,000 приседаний", type: "squats", target: 5000, reward: 3000, icon: "🌍" },
+  { id: "a15", name: "Атлант", desc: "Сделайте 10,000 приседаний", type: "squats", target: 10000, reward: 8000, icon: "🔱" },
+  { id: "a16", name: "Абсолют (Ноги)", desc: "Сделайте 50,000 приседаний", type: "squats", target: 50000, reward: 50000, icon: "🌠" },
   { id: "c1", name: "Выход из Леса", desc: "Пройди Главу 1", type: "chapter", target: 1, reward: 100, icon: "🌲" },
   { id: "c2", name: "Сухопутный", desc: "Пройди Главу 2", type: "chapter", target: 2, reward: 200, icon: "🐊" },
   { id: "c3", name: "Расхититель", desc: "Пройди Главу 3", type: "chapter", target: 3, reward: 500, icon: "🏛️" },
@@ -155,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function enterGame() {
   document.getElementById('screen-onboarding').classList.remove('active');
   document.getElementById('screen-game').classList.add('active');
-  requestWakeLock(); loadMonster(); initCamera(); showTab('arena');
+  requestWakeLock(); loadMonster(); showTab('arena');
 }
 document.getElementById('health-form').addEventListener('submit', (e) => { e.preventDefault(); enterGame(); });
 document.getElementById('btn-continue').addEventListener('click', enterGame);
@@ -164,20 +171,16 @@ document.getElementById('btn-restart-link').addEventListener('click', resetAll);
 document.getElementById('btn-full-reset').addEventListener('click', resetAll);
 function resetAll() { if(confirm('Сбросить весь прогресс? Это необратимо.')) { localStorage.removeItem('fit_dark_state'); location.reload(); } }
 
-// Переключение упражнения в новом UI (одна кнопка)
-function toggleExercise() {
-  const newType = currentExercise === 'pushup' ? 'squat' : 'pushup';
-  currentExercise = newType;
-  if (typeof poseState !== 'undefined') { poseState.exercise = newType; poseState.stage = "UP"; }
+function switchExercise(type) {
+  currentExercise = type;
+  if (typeof poseState !== 'undefined') { poseState.exercise = type; poseState.stage = "UP"; }
   
-  const btnIcon = document.getElementById('ex-icon');
-  const btnName = document.getElementById('ex-name');
-  if(newType === 'pushup') { btnIcon.innerText = "⚔️"; btnName.innerText = "Отжимания"; } 
-  else { btnIcon.innerText = "🛡️"; btnName.innerText = "Приседания"; }
+  document.getElementById('btn-pushup').classList.toggle('active', type === 'pushup');
+  document.getElementById('btn-squat').classList.toggle('active', type === 'squat');
 
   const statusEl = document.getElementById('pose-status');
   if (statusEl) {
-    statusEl.innerText = newType === 'pushup' ? "Режим: Отжимания" : "Режим: Приседания";
+    statusEl.innerText = type === 'pushup' ? "Режим: Отжимания" : "Режим: Приседания";
     statusEl.style.color = "#00e5ff";
     statusEl.style.animation = "none";
     setTimeout(() => statusEl.style.animation = "bannerPop 0.3s ease", 10);
@@ -191,8 +194,15 @@ function showTab(tabName) {
   document.getElementById(`tab-${tabName}`).classList.add('active');
   document.getElementById(`nav-${tabName}`).classList.add('active');
   window.__arenaActive = (tabName === 'arena');
-  if(tabName==='arena') startCombatTimer(); else stopCombatTimer();
-  if(tabName==='camp') startRestRegen(); else stopRestRegen();
+  
+  if(tabName === 'arena') { 
+    startCombatTimer(); 
+    if (typeof restartCamera === 'function') restartCamera();
+  } else { 
+    stopCombatTimer(); 
+    if (typeof stopCamera === 'function') stopCamera();
+  }
+  if(tabName === 'camp') startRestRegen(); else stopRestRegen();
 }
 
 function switchShopTab(tabId) {
@@ -260,14 +270,6 @@ function onRepCompleted(type) {
   let dmg = type === 'pushup' ? getDamagePushup() : getDamageSquat();
   
   if(type === 'pushup') gameState.totalPushups++; else gameState.totalSquats++;
-  
-  // Обновление гигантского счетчика
-  const bigCounter = document.getElementById('rep-count-big');
-  if(bigCounter) {
-    bigCounter.innerText = type === 'pushup' ? gameState.totalPushups : gameState.totalSquats;
-    bigCounter.style.transform = "scale(1.3)";
-    setTimeout(() => bigCounter.style.transform = "scale(1)", 150);
-  }
 
   addGold(5 + Math.floor(dmg * 0.02)); 
   currentMonsterHp = Math.max(0, currentMonsterHp - dmg);
@@ -311,13 +313,13 @@ function updateGameUI() {
 
   if (m) {
     document.getElementById('monster-hp-fill').style.width = `${(currentMonsterHp/m.hp)*100}%`;
-    document.getElementById('monster-hp-text').innerText = `${currentMonsterHp} / ${m.hp}`;
+    document.getElementById('monster-hp-text').innerText = `${currentMonsterHp} / ${m.hp} HP`;
   }
   document.getElementById('player-hp-fill').style.width = `${(gameState.playerHp/maxHp)*100}%`;
-  document.getElementById('player-hp-text').innerText = `${Math.floor(gameState.playerHp)} / ${maxHp}`;
+  document.getElementById('player-hp-text').innerText = `${Math.floor(gameState.playerHp)} / ${maxHp} HP`;
   
   const campFill = document.getElementById('camp-hp-fill'); if(campFill) campFill.style.width = `${(gameState.playerHp/maxHp)*100}%`;
-  const campText = document.getElementById('camp-hp-text'); if(campText) campText.innerText = `${Math.floor(gameState.playerHp)} / ${maxHp}`;
+  const campText = document.getElementById('camp-hp-text'); if(campText) campText.innerText = `${Math.floor(gameState.playerHp)} / ${maxHp} HP`;
 
   document.getElementById('shop-gold').innerText = `${gameState.gold} 💎`;
   document.getElementById('camp-gold').innerText = gameState.gold;
@@ -325,11 +327,9 @@ function updateGameUI() {
   document.getElementById('camp-level').innerText = gameState.monsterIdx + 1;
   document.getElementById('camp-reps').innerText = gameState.totalPushups + gameState.totalSquats;
 
-  // Если открыли первый раз, синхронизируем большой счетчик
-  const bigCounter = document.getElementById('rep-count-big');
-  if(bigCounter && bigCounter.innerText === "0") {
-    bigCounter.innerText = currentExercise === 'pushup' ? gameState.totalPushups : gameState.totalSquats;
-  }
+  document.getElementById('dmg-pushup-val').innerText = getDamagePushup();
+  document.getElementById('dmg-squat-val').innerText = getDamageSquat();
+  document.getElementById('rep-count').innerText = `${gameState.totalPushups} | ${gameState.totalSquats}`;
 }
 
 function renderShop() {
