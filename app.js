@@ -77,7 +77,6 @@ const SHOP_ITEMS = {
     { id: "a4", name: "Панцирь Дракона", hp: 1000, price: 4000, icon: "🐉", rarity: "legendary" },
     { id: "a5", name: "Доспех Титана", hp: 5000, price: 25000, icon: "🗿", rarity: "mythic" },
     { id: "a6", name: "Эгида Богов", hp: 50000, price: 200000, icon: "🛡️", rarity: "divine" },
-    // ДОБАВЛЕН НОВЫЙ АРТЕФАКТ ИЗ ASSETS
     { id: "a7", name: "Рудный Панцирь", hp: 150000, price: 900000, icon: "<img src='assets/minerals/Icons_01.png' style='width:90%; height:90%; object-fit:contain; filter:drop-shadow(0 0 5px var(--gold));'>", rarity: "divine" }
   ],
   weapons: [ // Урон от ОТЖИМАНИЙ
@@ -87,7 +86,6 @@ const SHOP_ITEMS = {
     { id: "w4", name: "Алмазный Секач", damage: 800, price: 3000, icon: "💎", rarity: "legendary" },
     { id: "w5", name: "Раскалыватель", damage: 4000, price: 20000, icon: "🌋", rarity: "mythic" },
     { id: "w6", name: "Коса Смерти", damage: 25000, price: 150000, icon: "🪓", rarity: "divine" },
-    // ДОБАВЛЕН НОВЫЙ АРТЕФАКТ ИЗ ASSETS
     { id: "w7", name: "Коготь Гоблина", damage: 100000, price: 900000, icon: "<img src='assets/goblins/Icons_01.png' style='width:90%; height:90%; object-fit:contain; filter:drop-shadow(0 0 5px var(--gold));'>", rarity: "divine" }
   ],
   boots: [ // Урон от ПРИСЕДАНИЙ
@@ -97,30 +95,29 @@ const SHOP_ITEMS = {
     { id: "b4", name: "Шаги Землетрясения", damage: 800, price: 3000, icon: "🌍", rarity: "legendary" },
     { id: "b5", name: "Ледяные Сапоги", damage: 4000, price: 20000, icon: "❄️", rarity: "mythic" },
     { id: "b6", name: "Поступь Хаоса", damage: 25000, price: 150000, icon: "🌌", rarity: "divine" },
-    // ДОБАВЛЕН НОВЫЙ АРТЕФАКТ ИЗ ASSETS
     { id: "b7", name: "Шахтёрские Сапоги", damage: 100000, price: 900000, icon: "<img src='assets/mine/Icons_01.png' style='width:90%; height:90%; object-fit:contain; filter:drop-shadow(0 0 5px var(--gold));'>", rarity: "divine" }
   ]
 };
 
 // 37 ДОСТИЖЕНИЙ
 const ACHIEVEMENTS = [
-  { id: "a1", name: "Первая Кровь", desc: "1 отжимание", type: "pushups", target: 1, reward: 10, icon: "🩸" },
-  { id: "a2", name: "Стальные Руки", desc: "50 отжиманий", type: "pushups", target: 50, reward: 50, icon: "💪" },
-  { id: "a3", name: "Сотня Ударов", desc: "100 отжиманий", type: "pushups", target: 100, reward: 100, icon: "🥊" },
-  { id: "a4", name: "Воин", desc: "500 отжиманий", type: "pushups", target: 500, reward: 300, icon: "⚔️" },
-  { id: "a5", name: "Легенда Рук", desc: "1,000 отжиманий", type: "pushups", target: 1000, reward: 800, icon: "🏋️" },
-  { id: "a6", name: "Титан", desc: "5,000 отжиманий", type: "pushups", target: 5000, reward: 3000, icon: "🦾" },
-  { id: "a7", name: "Бог Войны", desc: "10,000 отжиманий", type: "pushups", target: 10000, reward: 8000, icon: "🌋" },
-  { id: "a8", name: "Абсолют (Руки)", desc: "50,000 отжиманий", type: "pushups", target: 50000, reward: 50000, icon: "🌌" },
+  { id: "a1", name: "Первая Кровь", desc: "Сделайте 1 отжимание в бою", type: "pushups", target: 1, reward: 10, icon: "🩸" },
+  { id: "a2", name: "Стальные Руки", desc: "Сделайте 50 отжиманий", type: "pushups", target: 50, reward: 50, icon: "💪" },
+  { id: "a3", name: "Сотня Ударов", desc: "Сделайте 100 отжиманий", type: "pushups", target: 100, reward: 100, icon: "🥊" },
+  { id: "a4", name: "Воин", desc: "Сделайте 500 отжиманий", type: "pushups", target: 500, reward: 300, icon: "⚔️" },
+  { id: "a5", name: "Легенда Рук", desc: "Сделайте 1,000 отжиманий", type: "pushups", target: 1000, reward: 800, icon: "🏋️" },
+  { id: "a6", name: "Титан", desc: "Сделайте 5,000 отжиманий", type: "pushups", target: 5000, reward: 3000, icon: "🦾" },
+  { id: "a7", name: "Бог Войны", desc: "Сделайте 10,000 отжиманий", type: "pushups", target: 10000, reward: 8000, icon: "🌋" },
+  { id: "a8", name: "Абсолют (Руки)", desc: "Сделайте 50,000 отжиманий", type: "pushups", target: 50000, reward: 50000, icon: "🌌" },
   
-  { id: "a9", name: "Первый Шаг", desc: "1 приседание", type: "squats", target: 1, reward: 10, icon: "🦵" },
-  { id: "a10", name: "Крепкие Ноги", desc: "50 приседаний", type: "squats", target: 50, reward: 50, icon: "🦿" },
-  { id: "a11", name: "Сотня Шагов", desc: "100 приседаний", type: "squats", target: 100, reward: 100, icon: "🚶" },
-  { id: "a12", name: "Скала", desc: "500 приседаний", type: "squats", target: 500, reward: 300, icon: "🪨" },
-  { id: "a13", name: "Легенда Ног", desc: "1,000 приседаний", type: "squats", target: 1000, reward: 800, icon: "⛰️" },
-  { id: "a14", name: "Землетрясение", desc: "5,000 приседаний", type: "squats", target: 5000, reward: 3000, icon: "🌍" },
-  { id: "a15", name: "Атлант", desc: "10,000 приседаний", type: "squats", target: 10000, reward: 8000, icon: "🔱" },
-  { id: "a16", name: "Абсолют (Ноги)", desc: "50,000 приседаний", type: "squats", target: 50000, reward: 50000, icon: "🌠" },
+  { id: "a9", name: "Первый Шаг", desc: "Сделайте 1 приседание в бою", type: "squats", target: 1, reward: 10, icon: "🦵" },
+  { id: "a10", name: "Крепкие Ноги", desc: "Сделайте 50 приседаний", type: "squats", target: 50, reward: 50, icon: "🦿" },
+  { id: "a11", name: "Сотня Шагов", desc: "Сделайте 100 приседаний", type: "squats", target: 100, reward: 100, icon: "🚶" },
+  { id: "a12", name: "Скала", desc: "Сделайте 500 приседаний", type: "squats", target: 500, reward: 300, icon: "🪨" },
+  { id: "a13", name: "Легенда Ног", desc: "Сделайте 1,000 приседаний", type: "squats", target: 1000, reward: 800, icon: "⛰️" },
+  { id: "a14", name: "Землетрясение", desc: "Сделайте 5,000 приседаний", type: "squats", target: 5000, reward: 3000, icon: "🌍" },
+  { id: "a15", name: "Атлант", desc: "Сделайте 10,000 приседаний", type: "squats", target: 10000, reward: 8000, icon: "🔱" },
+  { id: "a16", name: "Абсолют (Ноги)", desc: "Сделайте 50,000 приседаний", type: "squats", target: 50000, reward: 50000, icon: "🌠" },
   
   { id: "c1", name: "Выход из Леса", desc: "Пройди Главу 1", type: "chapter", target: 1, reward: 100, icon: "🌲" },
   { id: "c2", name: "Сухопутный", desc: "Пройди Главу 2", type: "chapter", target: 2, reward: 200, icon: "🐊" },
@@ -167,6 +164,11 @@ function showToast(text) {
   const t = document.createElement('div'); t.className = 'toast'; t.innerText = text;
   c.appendChild(t); setTimeout(() => t.remove(), 2700);
 }
+
+// Окно с описанием трофея
+window.showAchDesc = (name, desc) => {
+  showToast(`ℹ️ ${name}: ${desc}`);
+};
 
 document.addEventListener('DOMContentLoaded', () => {
   renderShop(); renderAchievements(); updateGameUI();
@@ -322,6 +324,7 @@ function updateGameUI() {
   const m = MONSTERS[gameState.monsterIdx];
   const maxHp = getMaxHp();
   
+  // Корректировка HP при смене брони
   if (gameState.playerHp > maxHp) gameState.playerHp = maxHp;
 
   if (m) {
@@ -394,12 +397,12 @@ function renderAchievements() {
   };
   document.getElementById('achievements-list').innerHTML = ACHIEVEMENTS.map(ach => {
     const { cur, t, unl } = evalAch(ach); const clmd = gameState.claimedAchievements.includes(ach.id);
-    return `<div class="achieve-card ${unl?'unlocked':''} ${clmd?'claimed':''}">
+    return `<div class="achieve-card ${unl?'unlocked':''} ${clmd?'claimed':''}" onclick="showAchDesc('${ach.name}', '${ach.desc}')">
       <div class="icon-frame shop-icon-frame trophy-icon-frame">${ach.icon}</div>
       <strong style="font-size:11px; color:${unl?'var(--gold-bright)':'#666'}; margin-top:4px;">${ach.name}</strong>
       <div class="ach-progress"><div class="ach-progress-fill" style="width:${Math.min(100, (cur/t)*100)}%"></div></div>
       <small style="font-size:10px; color:#888;">${Math.min(cur, t).toLocaleString()} / ${t.toLocaleString()}</small>
-      ${unl ? (clmd ? `<span style="color:#2ecc71; font-size:10px; margin-top:5px; font-weight:bold;">✓ Забрано</span>` : `<button class="btn-claim" onclick="claimAch('${ach.id}')">Забрать +${ach.reward}💎</button>`) : ''}
+      ${unl ? (clmd ? `<span style="color:#2ecc71; font-size:10px; margin-top:5px; font-weight:bold;">✓ Забрано</span>` : `<button class="btn-claim" onclick="event.stopPropagation(); window.claimAch('${ach.id}')">Забрать +${ach.reward}💎</button>`) : ''}
     </div>`;
   }).join('');
 }
