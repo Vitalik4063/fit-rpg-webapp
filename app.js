@@ -5,11 +5,15 @@ if (tg) { tg.ready(); tg.expand(); }
 let wakeLock = null;
 async function requestWakeLock() { try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch (err) {} }
 
+// Логика переключения видимости
 document.addEventListener('visibilitychange', async () => {
   if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
   
   if (document.visibilityState === 'visible') {
-    if (window.__arenaActive && typeof restartCamera === 'function') restartCamera();
+    if (window.__arenaActive && typeof restartCamera === 'function') {
+      // Даем браузеру 500мс, чтобы полностью "проснуться" после блокировки
+      setTimeout(restartCamera, 500);
+    }
   } else {
     if (typeof stopCamera === 'function') stopCamera();
   }
@@ -59,7 +63,7 @@ const MONSTERS = MONSTERS_RAW.map((m, idx) => ({
 }));
 
 const SHOP_ITEMS = {
-  armors: [ // Увеличивают МАКСИМАЛЬНОЕ HP
+  armors: [ 
     { id: "a1", name: "Рваная Накидка", hp: 0, price: 0, icon: "🧥", rarity: "common" },
     { id: "a2", name: "Кольчуга Тьмы", hp: 50, price: 100, icon: "👕", rarity: "rare" },
     { id: "a3", name: "Стальной Нагрудник", hp: 200, price: 500, icon: "🦺", rarity: "epic" },
@@ -68,7 +72,7 @@ const SHOP_ITEMS = {
     { id: "a6", name: "Эгида Богов", hp: 50000, price: 200000, icon: "🛡️", rarity: "divine" },
     { id: "a7", name: "Рудный Панцирь", hp: 150000, price: 900000, icon: "<img src='assets/minerals/Icons_01.png' style='width:100%; height:100%; object-fit:contain;'>", rarity: "divine" }
   ],
-  weapons: [ // Урон от ОТЖИМАНИЙ
+  weapons: [ 
     { id: "w1", name: "Ржавый Меч", damage: 10, price: 0, icon: "🗡️", rarity: "common" },
     { id: "w2", name: "Рубиновый Клинок", damage: 30, price: 60, icon: "♦️", rarity: "rare" },
     { id: "w3", name: "Изумрудный Топор", damage: 150, price: 400, icon: "❇️", rarity: "epic" },
@@ -77,7 +81,7 @@ const SHOP_ITEMS = {
     { id: "w6", name: "Коса Смерти", damage: 25000, price: 150000, icon: "🪓", rarity: "divine" },
     { id: "w7", name: "Коготь Гоблина", damage: 100000, price: 900000, icon: "<img src='assets/goblins/Icons_01.png' style='width:100%; height:100%; object-fit:contain;'>", rarity: "divine" }
   ],
-  boots: [ // Урон от ПРИСЕДАНИЙ
+  boots: [ 
     { id: "b1", name: "Старые Сапоги", damage: 10, price: 0, icon: "🥾", rarity: "common" },
     { id: "b2", name: "Тяжелые Поножи", damage: 30, price: 60, icon: "⚙️", rarity: "rare" },
     { id: "b3", name: "Мифриловые Поножи", damage: 150, price: 400, icon: "🌟", rarity: "epic" },
