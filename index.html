@@ -43,7 +43,7 @@
           </select>
         </div>
 
-        <button type="submit" class="fantasy-btn glow-btn">СПОЛЗТИ В БЕЗДНУ 💀</button>
+        <button type="submit" class="fantasy-btn glow-btn">ВОЙТИ В БЕЗДНУ 💀</button>
       </form>
     </div>
   </div>
@@ -76,7 +76,10 @@
         <div class="chapter-badge" id="chapter-title">ГЛАВА I: ШЕПЧУЩИЙ ЛЕС</div>
 
         <div class="monster-viewport">
-          <div id="monster-sprite" class="doom-sprite">🧟</div>
+          <!-- Крупная иконка монстра с подложкой -->
+          <div class="icon-frame monster-frame">
+            <div id="monster-sprite" class="huge-icon">🧟</div>
+          </div>
           <div id="damage-popup-container"></div>
         </div>
       </div>
@@ -86,12 +89,13 @@
           ⚔️ УДАР МЕЧОМ / ОТЖИМАНИЯ (<span id="dmg-pushup-val">10</span> DMG)
         </button>
         <button id="btn-squat" class="btn-ex" onclick="switchExercise('squat')">
-          🛡️ ЩИТ И ПОНОЖИ / ПРИСЕДАНИЯ (<span id="dmg-squat-val">10</span> DMG)
+          🛡️ ЩИТ / ПРИСЕДАНИЯ (<span id="dmg-squat-val">10</span> DMG)
         </button>
       </div>
 
+      <!-- КАМЕРА С АТРИБУТАМИ АВТОЗАПУСКА ДЛЯ TELEGRAM -->
       <div class="camera-wrapper">
-        <video id="webcam" style="display:none;" playsinline></video>
+        <video id="webcam" autoplay muted playsinline style="display:none;"></video>
         <canvas id="canvas"></canvas>
 
         <div class="angle-hud-overlay">
@@ -101,7 +105,7 @@
             <div id="angle-meter-fill" class="angle-meter-fill"></div>
             <div class="angle-target-marker" id="angle-target-marker"></div>
           </div>
-          <div class="floor-dist-label">ДИСТ. ДО ПОЛА: <span id="floor-dist-val">100</span>%</div>
+          <div class="floor-dist-label">ПОЛ: <span id="floor-dist-val">100</span>%</div>
         </div>
       </div>
 
@@ -111,7 +115,7 @@
       </div>
     </div>
 
-    <!-- ТОРГОВЕЦ -->
+    <!-- ТОРГОВЕЦ / ЛАВКА -->
     <div id="tab-shop" class="tab-content">
       <h2 class="section-title">🔮 ЛАВКА ТОРГОВЦА</h2>
       <p class="gold-balance">РУДЫ И ЗОЛОТО: <strong id="shop-gold" class="gold-text">0 💎</strong></p>
