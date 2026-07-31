@@ -1,52 +1,83 @@
 let poseStage = "up";
+let currentAngle = 0;
 
+// Расчет угла между 3 точками
 function calculateAngle(A, B, C) {
   const radians = Math.atan2(C.y - B.y, C.x - B.x) - Math.atan2(A.y - B.y, A.x - B.x);
   let angle = Math.abs((radians * 180.0) / Math.PI);
   if (angle > 180.0) angle = 360 - angle;
-  return angle;
+  return Math.round(angle);
 }
 
 function resetExerciseStage() { poseStage = "up"; }
 
-// АВТОМАТИЧЕСКИЙ АНАЛИЗ ПОЛОЖЕНИЯ ТЕЛА С КАМЕРЫ
-function processPoseLandmarks(landmarks) {
-  const statusEl = document.getElementById('pose-status');
+// Отрисовка скелета и угломера на Canvas
+function drawSkeletonAndAngle(ctx, landmarks, width, height) {
+  let p1, p2, p3, targetAngleName;
 
   if (currentExercise === 'pushup') {
-    // Точки: Плечо (11), Локоть (13), Запястье (15)
-    const shoulder = landmarks[11], elbow = landmarks[13], wrist = landmarks[15];
-    if (shoulder && elbow && wrist) {
-      const angle = calculateAngle(shoulder, elbow, wrist);
+    // 11: Плечо, 13: Локоть, 15: Запястье
+    p1 = landmarks[11]; p2 = landmarks[13]; p3 = landmarks[15];
+    targetAngleName = "Локоть";
+  } else {
+    // 23: Бедро, 25: Колено, 27: Лодыжка
+    p1 = landmarks[23]; p2 = landmarks[25]; p3 = landmarks[27];
+    targetAngleName = "Колено";
+  }
 
-      if (angle > 160) {
-        poseStage = "up";
-        statusEl.innerText = "Опускайся..."; statusEl.style.color = "#f1c40f";
-      }
-      // Опускание в отжимание (< 90 градусов в локте)
-      if (angle < 90 && poseStage === "up") {
-        poseStage = "down";
-        statusEl.innerText = "ОТЖИМАНИЕ!"; statusEl.style.color = "#2ecc71";
-        onRepCompleted('pushup'); // Авто-урон врагу
-      }
-    }
-  } else if (currentExercise === 'squat') {
-    // Точки: Бедро (23), Колено (25), Лодыжка (27)
-    const hip = landmarks[23], knee = landmarks[25], ankle = landmarks[27];
-    if (hip && knee && ankle) {
-      const angle = calculateAngle(hip, knee, ankle);
+  // Проверка видимости суставов (исключает ложные срабатывания при движении камеры)
+  if (!p1 || !p2 || !p3 || p1.visibility < 0.65 || p2.visibility < 0.65 || p3.visibility < 0.65) {
+    document.getElementById('angle-display').innerText = "Ищите кадр...";
+    document.getElementById('angle-display').style.color = "#ff3333";
+    return;
+  }
 
-      if (angle > 160) {
-        poseStage = "up";
-        statusEl.innerText = "Приседай..."; statusEl.style.color = "#f1c40f";
-      }
-      // Приседание (< 100 градусов в колене)
-      if (angle < 100 && poseStage === "up") {
-        poseStage = "down";
-        statusEl.innerText = "ПРИСЕДАНИЕ!"; statusEl.style.color = "#2ecc71";
-        onRepCompleted('squat'); // Авто-урон врагу
-      }
-    }
+  // Расчет текущего угла
+  currentAngle = calculateAngle(p1, p2, p3);
+  document.getElementById('angle-display').innerText = `${currentAngle}° (${targetAngleName})`;
+
+  // Координаты на Canvas
+  const x1 = p1.x * width, y1 = p1.y * height;
+  const x2 = p2.x * width, y2 = p2.y * height;
+  const x3 = p3.x * width, y3 = p3.y * height;
+
+  // 1. Отрисовка линий суставов
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = (poseStage === "down") ? "#00ff00" : "#ffcc00"; // Зеленый при сгибании
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.lineTo(x3, y3);
+  ctx.stroke();
+
+  // 2. Отрисовка суставных точек
+  [p1, p2, p3].forEach(p => {
+    ctx.fillStyle = "#ff2200";
+    ctx.beginPath();
+    ctx.arc(p.x * width, p.y * height, 7, 0, 2 * Math.PI);
+    ctx.fill();
+  });
+
+  // 3. Отрисовка Дуги и Значения Угла над центральным суставом
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 22px Courier New";
+  ctx.shadowColor = "black";
+  ctx.shadowBlur = 5;
+  ctx.fillText(`${currentAngle}°`, x2 + 15, y2 - 15);
+
+  // 4. Логика фиксации отжиманий / приседаний
+  const targetMinAngle = (currentExercise === 'pushup') ? 90 : 100;
+  
+  if (currentAngle > 155) {
+    poseStage = "up";
+    document.getElementById('angle-display').style.color = "#f1c40f";
+  }
+  
+  // Четкое достижение нужного угла
+  if (currentAngle <= targetMinAngle && poseStage === "up") {
+    poseStage = "down";
+    document.getElementById('angle-display').style.color = "#00ff00";
+    onRepCompleted(currentExercise); // Вызов нанесения урона
   }
 }
 
@@ -59,15 +90,18 @@ function initCamera() {
     locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
   });
 
-  pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5 });
+  pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.65 });
 
   pose.onResults((results) => {
-    canvasElement.width = videoElement.videoWidth;
-    canvasElement.height = videoElement.videoHeight;
+    canvasElement.width = videoElement.videoWidth || 640;
+    canvasElement.height = videoElement.videoHeight || 480;
+
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
-    if (results.poseLandmarks) processPoseLandmarks(results.poseLandmarks);
+    if (results.poseLandmarks) {
+      drawSkeletonAndAngle(canvasCtx, results.poseLandmarks, canvasElement.width, canvasElement.height);
+    }
   });
 
   const camera = new Camera(videoElement, {
