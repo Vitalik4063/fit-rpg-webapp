@@ -17,6 +17,46 @@ function calculateAngle(A, B, C) {
   return Math.round(angle);
 }
 
+// Функции для отрисовки линий скелета (AI Tracker)
+function drawBone(ctx, p1, p2, color = "#ffef9f", width = 4) {
+  if (!p1 || !p2 || p1.visibility < 0.3 || p2.visibility < 0.3) return;
+  ctx.beginPath();
+  ctx.moveTo(p1.x * ctx.canvas.width, p1.y * ctx.canvas.height);
+  ctx.lineTo(p2.x * ctx.canvas.width, p2.y * ctx.canvas.height);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.stroke();
+}
+
+function drawJointPoint(ctx, p, color = "#f02a2a", radius = 5) {
+  if (!p || p.visibility < 0.3) return;
+  ctx.beginPath();
+  ctx.arc(p.x * ctx.canvas.width, p.y * ctx.canvas.height, radius, 0, 2 * Math.PI);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function drawFullSkeleton(ctx, lm, activeColor) {
+  // Торс
+  drawBone(ctx, lm[11], lm[12], "#d4af37", 3);
+  drawBone(ctx, lm[11], lm[23], "#d4af37", 3);
+  drawBone(ctx, lm[12], lm[24], "#d4af37", 3);
+  drawBone(ctx, lm[23], lm[24], "#d4af37", 3);
+
+  // Руки (выделяются при отжиманиях)
+  const armColor = currentExercise === 'pushup' ? activeColor : "#d4af37";
+  drawBone(ctx, lm[11], lm[13], armColor, 5); drawBone(ctx, lm[13], lm[15], armColor, 5);
+  drawBone(ctx, lm[12], lm[14], armColor, 5); drawBone(ctx, lm[14], lm[16], armColor, 5);
+
+  // Ноги (выделяются при приседаниях)
+  const legColor = currentExercise === 'squat' ? activeColor : "#d4af37";
+  drawBone(ctx, lm[23], lm[25], legColor, 5); drawBone(ctx, lm[25], lm[27], legColor, 5);
+  drawBone(ctx, lm[24], lm[26], legColor, 5); drawBone(ctx, lm[26], lm[28], legColor, 5);
+
+  // Суставы
+  [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28].forEach(idx => drawJointPoint(ctx, lm[idx]));
+}
+
 function processPose(landmarks, ctx) {
   const statusEl = document.getElementById('pose-status');
   const cfg = CONFIG[currentExercise];
@@ -25,17 +65,24 @@ function processPose(landmarks, ctx) {
   else { A = landmarks[23]; B = landmarks[25]; C = landmarks[27]; }
 
   if (!A || !B || !C || A.visibility < 0.4) {
-    statusEl.innerText = "ВСТАНЬТЕ В КАДР"; statusEl.style.color = "#c93b3b"; return;
+    statusEl.innerText = "ВСТАНЬТЕ В КАДР"; statusEl.style.color = "#f02a2a";
+    drawFullSkeleton(ctx, landmarks, "#555"); // Отрисовка серым, если не готов
+    return;
   }
+  
   const currentAngle = calculateAngle(A, B, C);
   const floorDistPct = landmarks[0] ? Math.round((1 - landmarks[0].y) * 100) : 100;
   
   document.getElementById('live-angle-val').innerText = currentAngle;
   document.getElementById('angle-meter-fill').style.width = `${Math.min(100, (currentAngle/180)*100)}%`;
 
-  if (currentAngle >= cfg.upAngle) { poseState.stage = "UP"; statusEl.innerText = "ГОТОВ (ОПУСКАЙСЯ)"; statusEl.style.color = "#ffdf73"; }
+  // Подсветка скелета
+  const activeColor = currentAngle <= cfg.downAngle ? "#39e079" : "#ffef9f";
+  drawFullSkeleton(ctx, landmarks, activeColor);
+
+  if (currentAngle >= cfg.upAngle) { poseState.stage = "UP"; statusEl.innerText = "ГОТОВ (ОПУСКАЙСЯ)"; statusEl.style.color = "#ffef9f"; }
   if (currentAngle <= cfg.downAngle && floorDistPct <= cfg.maxFloorDistPct && poseState.stage === "UP") {
-    poseState.stage = "DOWN"; statusEl.innerText = "ОТЛИЧНО! ВСТАВАЙ!"; statusEl.style.color = "#2ecc71";
+    poseState.stage = "DOWN"; statusEl.innerText = "ОТЛИЧНО! ВСТАВАЙ!"; statusEl.style.color = "#39e079";
     if (typeof onRepCompleted === 'function') onRepCompleted(currentExercise);
   }
 }
@@ -44,16 +91,28 @@ function initCamera() {
   const videoElement = document.getElementById('webcam');
   const canvasElement = document.getElementById('canvas');
   const canvasCtx = canvasElement.getContext('2d');
-  if (typeof Pose === 'undefined' || typeof Camera === 'undefined') return;
+  
+  if (typeof Pose === 'undefined' || typeof Camera === 'undefined') {
+    console.error("MediaPipe не загружен"); return;
+  }
+  
   const pose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
-  pose.setOptions({ modelComplexity: 0, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+  pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+  
   pose.onResults((results) => {
     canvasElement.width = videoElement.videoWidth || 640;
     canvasElement.height = videoElement.videoHeight || 480;
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
-    if (results.poseLandmarks && window.__arenaActive) processPose(results.poseLandmarks, canvasCtx);
+    
+    if (results.poseLandmarks && window.__arenaActive) {
+      processPose(results.poseLandmarks, canvasCtx);
+    }
   });
-  const camera = new Camera(videoElement, { onFrame: async () => { await pose.send({ image: videoElement }); }, facingMode: 'user', width: 640, height: 480 });
-  camera.start();
+
+  window.__activeCamera = new Camera(videoElement, { 
+    onFrame: async () => { await pose.send({ image: videoElement }); }, 
+    facingMode: 'user', width: 640, height: 480 
+  });
+  window.__activeCamera.start();
 }
