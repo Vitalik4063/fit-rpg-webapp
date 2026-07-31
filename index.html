@@ -6,8 +6,6 @@
   <title>Без названия</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-  <!-- MediaPipe Pose JS -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
@@ -26,7 +24,7 @@
       <div class="card-embers"></div>
       <div class="card-content">
         <h1 class="gothic-title">⚔️ БЕЗДНА: КЛИНОК И ПЛОТЬ ⚔️</h1>
-        <p class="gothic-subtitle">6 ГЛАВ · 30 ИСПЫТАНИЙ · ТВОЁ ТЕЛО — ТВОЁ ОРУЖИЕ</p>
+        <p class="gothic-subtitle">10 ГЛАВ · 50 ИСПЫТАНИЙ · ТВОЁ ТЕЛО — ТВОЁ ОРУЖИЕ</p>
 
         <form id="health-form">
           <div class="form-group">
@@ -60,10 +58,8 @@
     </div>
   </div>
 
-
   <!-- ИГРОВАЯ АРЕНА -->
   <div id="screen-game" class="screen">
-
     <div id="tab-arena" class="tab-content active">
 
       <div class="fantasy-hud-top">
@@ -102,10 +98,10 @@
 
       <div class="exercise-selector">
         <button id="btn-pushup" class="btn-ex active" onclick="switchExercise('pushup')">
-          ⚔️ УДАР МЕЧОМ / ОТЖИМАНИЯ (<span id="dmg-pushup-val">10</span> DMG)
+          ⚔️ ОТЖИМАНИЯ (<span id="dmg-pushup-val">10</span> DMG)
         </button>
         <button id="btn-squat" class="btn-ex" onclick="switchExercise('squat')">
-          🛡️ ЩИТ / ПРИСЕДАНИЯ (<span id="dmg-squat-val">10</span> DMG)
+          🛡️ ПРИСЕДАНИЯ (<span id="dmg-squat-val">10</span> DMG)
         </button>
       </div>
 
@@ -126,7 +122,7 @@
 
       <div class="stats-panel">
         <div>ПОВТОРЫ: <strong id="rep-count">💪 0 | 🦵 0</strong></div>
-        <div>ПОЗА: <strong id="pose-status">ИНИЦИАЛИЗАЦИЯ...</strong></div>
+        <div>СТАТУС: <strong id="pose-status">ИНИЦИАЛИЗАЦИЯ...</strong></div>
       </div>
     </div>
 
@@ -134,8 +130,8 @@
     <div id="tab-camp" class="tab-content">
       <div class="camp-panel">
         <div class="camp-fire">🔥</div>
-        <h2 class="section-title">ЛАГЕРЬ У ВХОДА В ПОДЗЕМЕЛЬЕ</h2>
-        <p class="camp-flavor">Здесь безопасно. Пока вы отдыхаете у костра, ни один враг вас не тронет — здоровье восстанавливается само.</p>
+        <h2 class="section-title">ЛАГЕРЬ У ВХОДА</h2>
+        <p class="camp-flavor">Пока вы отдыхаете у костра, здоровье восстанавливается само.</p>
 
         <div class="hud-card player-hud camp-hp-card" id="camp-hp-card">
           <div class="hud-title">🗡️ ЗДОРОВЬЕ РЫЦАРЯ</div>
@@ -146,14 +142,14 @@
         </div>
 
         <div class="camp-stats-grid">
-          <div class="camp-stat"><span class="camp-stat-label">Глава</span><span id="camp-chapter" class="camp-stat-val">I / VI</span></div>
-          <div class="camp-stat"><span class="camp-stat-label">Уровень</span><span id="camp-level" class="camp-stat-val">1 / 30</span></div>
+          <div class="camp-stat"><span class="camp-stat-label">Глава</span><span id="camp-chapter" class="camp-stat-val">I / X</span></div>
+          <div class="camp-stat"><span class="camp-stat-label">Уровень</span><span id="camp-level" class="camp-stat-val">1 / 50</span></div>
           <div class="camp-stat"><span class="camp-stat-label">Золото</span><span id="camp-gold" class="camp-stat-val">0 💎</span></div>
           <div class="camp-stat"><span class="camp-stat-label">Повторы</span><span id="camp-reps" class="camp-stat-val">0</span></div>
         </div>
 
         <button id="btn-return-battle" class="fantasy-btn glow-btn" onclick="showTab('arena')">⚔️ ВЕРНУТЬСЯ В БОЙ</button>
-
+        
         <div id="camp-victory-panel" class="camp-victory-panel" style="display:none;">
           <p>🔱 Бездна покорена! Начните Новую Игру+ и пройдите всех врагов заново на новом витке легенды — снаряжение и трофеи сохранятся.</p>
           <button type="button" id="btn-new-game-plus" class="fantasy-btn">🔄 НОВАЯ ИГРА+</button>
@@ -165,10 +161,15 @@
 
     <!-- ТОРГОВЕЦ / ЛАВКА -->
     <div id="tab-shop" class="tab-content">
-      <h2 class="section-title">🔮 ЛАВКА ТОРГОВЦА</h2>
+      <h2 class="section-title">🔮 ЛАВКА БЕССМЕРТНЫХ</h2>
       <p class="gold-balance">РУДЫ И ЗОЛОТО: <strong id="shop-gold" class="gold-text">0 💎</strong></p>
+      
+      <!-- Секция Монетизации -->
+      <h3 style="margin-top: 15px; color: #ffdf73; text-shadow: 0 0 10px #ffdf73;">✨ АРТЕФАКТЫ БОГОВ (2 ⭐️ КАЖДЫЙ) ✨</h3>
+      <p style="font-size: 10px; color: #888; text-align: center; margin-bottom: 10px;">Эти артефакты даруют невероятную силу. Оплата через Telegram Stars.</p>
+      <div id="premium-list" class="shop-list premium-grid"></div>
 
-      <h3>🗡️ ОРУЖИЕ (УРОН ОТЖИМАНИЙ)</h3>
+      <h3 style="margin-top: 25px;">🗡️ ОРУЖИЕ (УРОН ОТЖИМАНИЙ)</h3>
       <div id="weapons-list" class="shop-list"></div>
 
       <h3 style="margin-top: 15px;">🛡️ ДОСПЕХИ (УРОН ПРИСЕДАНИЙ)</h3>
@@ -177,7 +178,7 @@
 
     <!-- ДОСТИЖЕНИЯ -->
     <div id="tab-achievements" class="tab-content">
-      <h2 class="section-title">🏆 ДОСТИЖЕНИЯ И ТРОФЕИ</h2>
+      <h2 class="section-title">🏆 ТРОФЕИ</h2>
       <div id="achievements-list" class="achievements-grid"></div>
     </div>
 
