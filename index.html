@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>FitRPG WebApp - 30 Levels Edition</title>
+  <title>FitRPG DOOM Edition</title>
 
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -16,67 +16,84 @@
 </head>
 <body>
 
-  <!-- ================= 1. ЭКРАН ОНБОРДИНГА ================= -->
+  <!-- Screen 1: Onboarding -->
   <div id="screen-onboarding" class="screen active">
-    <h1>⚔️ FitRPG: 30 Уровней Подземелья</h1>
-    <p class="subtitle">Пройди анкетирование для старта кампании</p>
+    <h1 class="doom-title">🔥 DOOM FIT: 30 LEVELS</h1>
+    <p class="subtitle">Уничтожай монстров отжиманиями и приседаниями</p>
 
     <form id="health-form">
       <div class="form-group">
-        <label>Уровень физической подготовки:</label>
+        <label>Уровень подготовки:</label>
         <select id="fitness-level">
-          <option value="beginner">Новичок (Только начинаю)</option>
-          <option value="medium">Средний (Занимаюсь периодически)</option>
-          <option value="pro">Опытный атлет (Регулярный спорт)</option>
+          <option value="beginner">Новичок</option>
+          <option value="medium">Средний</option>
+          <option value="pro">Атлет</option>
         </select>
       </div>
 
       <div class="form-group">
-        <label>Ограничения по здоровью:</label>
+        <label>Здоровье:</label>
         <select id="health-issues">
-          <option value="none">Нет ограничений</option>
+          <option value="none">Без ограничений</option>
           <option value="knees">Проблемы с коленями</option>
-          <option value="wrists">Проблемы с суставами рук/запястьями</option>
-          <option value="back">Проблемы со спиной</option>
+          <option value="wrists">Проблемы с суставами</option>
         </select>
       </div>
 
-      <button type="submit" class="btn-primary glow-btn">НАЧАТЬ ПУТЬ В 30 УРОВНЕЙ 🚀</button>
+      <button type="submit" class="btn-primary doom-btn">ВОЙТИ В АД 🚀</button>
     </form>
   </div>
 
-
-  <!-- ================= 2. ИГРОВАЯ АРЕНА ================= -->
+  <!-- Screen 2: Game Arena -->
   <div id="screen-game" class="screen">
     
-    <!-- Вкладка: Арена -->
     <div id="tab-arena" class="tab-content active">
-      <div class="user-header">
-        <span id="player-lvl">Уровень: 1 / 30</span>
-        <span id="player-gold" class="gold-text">🪙 0</span>
-        <span id="player-xp">✨ 0 XP</span>
-      </div>
-
-      <!-- Игровой арена-блок с авто-сменой фона под главу -->
-      <div id="arena-bg" class="arena-bg chapter-1">
-        <div class="chapter-title" id="chapter-title">Глава I: Лесной Рубеж</div>
-        <h2 id="monster-name">Лесной Слизень</h2>
-
-        <!-- Визуализация монстра и всплывающего урона -->
-        <div class="monster-stage">
-          <div id="monster-sprite" class="monster-sprite">🟢</div>
-          <div id="damage-popup-container"></div>
+      
+      <!-- Панель статуса Игрока и Врага (HUD DOOM Style) -->
+      <div class="hud-panel">
+        <div class="hud-box">
+          <span class="hud-label">ИГРОК HP</span>
+          <div class="hp-bar player-hp">
+            <div id="player-hp-fill" class="hp-fill" style="width: 100%;"></div>
+            <span id="player-hp-text">100 / 100</span>
+          </div>
         </div>
 
-        <div class="hp-bar-box">
-          <div class="hp-bar">
+        <div class="hud-box">
+          <span id="player-gold" class="gold-text">🪙 0</span> | 
+          <span id="player-lvl">LVL 1/30</span>
+        </div>
+
+        <div class="hud-box">
+          <span class="hud-label" id="monster-name">СЛИЗЕНЬ HP</span>
+          <div class="hp-bar enemy-hp">
             <div id="hp-fill" class="hp-fill" style="width: 100%;"></div>
-            <span id="hp-text">10 / 10 HP</span>
+            <span id="hp-text">10 / 10</span>
           </div>
         </div>
       </div>
 
-      <!-- Переключатель режима авто-отслеживания -->
+      <!-- Увеличенная DOOM-Арена (Монстр overlay поверх видео) -->
+      <div id="arena-bg" class="arena-bg chapter-1">
+        <div class="chapter-title" id="chapter-title">Глава I: Лесной Рубеж</div>
+        
+        <!-- Красная вспышка при получении урона игроком -->
+        <div id="screen-damage-flash" class="damage-flash"></div>
+
+        <!-- 2D Ретро-Монстр DOOM -->
+        <div class="doom-monster-container">
+          <div id="monster-sprite" class="doom-sprite">🟢</div>
+          <div id="damage-popup-container"></div>
+        </div>
+
+        <!-- КРУПНАЯ КАМЕРА С ОТРЕДАКТИРОВАННЫМ СКЕЛЕТОМ И УГЛОМ -->
+        <div class="camera-container">
+          <video id="webcam" style="display:none;" playsinline></video>
+          <canvas id="canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Выбор оружия / Упражнения -->
       <div class="exercise-selector">
         <button id="btn-pushup" class="btn-ex active" onclick="switchExercise('pushup')">
           💪 Отжимания (<span id="dmg-pushup-val">1</span> DMG)
@@ -86,41 +103,26 @@
         </button>
       </div>
 
-      <!-- Контейнер авто-анализа камеры -->
-      <div class="camera-container">
-        <video id="webcam" style="display:none;" playsinline></video>
-        <canvas id="canvas"></canvas>
-      </div>
-
       <div class="stats-panel">
-        <div>Повторов: <strong id="rep-count">💪 0 | 🦵 0</strong></div>
-        <div>Трекер: <strong id="pose-status" style="color: #f1c40f;">Запуск камеры...</strong></div>
+        <div>Повторы: <strong id="rep-count">💪 0 | 🦵 0</strong></div>
+        <div>Текущий угол: <strong id="angle-display" style="color:#00ff00;">---°</strong></div>
       </div>
     </div>
 
-    <!-- Вкладка: Магазин -->
+    <!-- Магазин -->
     <div id="tab-shop" class="tab-content">
-      <h2>🛒 Магазин Оружия и Экипировки</h2>
-      <p>Золото: <strong id="shop-gold" class="gold-text">0 🪙</strong></p>
-
-      <h3>💪 Мечи (Урон отжиманий)</h3>
+      <h2>🛒 Магазин Экипировки</h2>
+      <p>Баланс: <strong id="shop-gold" class="gold-text">0 🪙</strong></p>
+      <h3>💪 Оружие (Отжимания)</h3>
       <div id="weapons-list" class="shop-list"></div>
-
-      <h3 style="margin-top: 15px;">🦵 Поножи (Урон приседаний)</h3>
+      <h3 style="margin-top: 15px;">🦵 Броня/Поножи (Приседания)</h3>
       <div id="boots-list" class="shop-list"></div>
     </div>
 
-    <!-- Вкладка: Достижения -->
-    <div id="tab-achievements" class="tab-content">
-      <h2>🏆 Достижения (30 Уровней)</h2>
-      <div id="achievements-list" class="achievements-grid"></div>
-    </div>
-
-    <!-- Нижнее меню -->
+    <!-- Нижнее Меню -->
     <div class="bottom-nav">
-      <button onclick="showTab('arena')" id="nav-arena" class="nav-btn active">⚔️ Арена</button>
-      <button onclick="showTab('shop')" id="nav-shop" class="nav-btn">🛒 Магазин</button>
-      <button onclick="showTab('achievements')" id="nav-achievements" class="nav-btn">🏆 Награды</button>
+      <button onclick="showTab('arena')" id="nav-arena" class="nav-btn active">⚔️ БОЙ</button>
+      <button onclick="showTab('shop')" id="nav-shop" class="nav-btn">🛒 МАГАЗИН</button>
     </div>
 
   </div>
