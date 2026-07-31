@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Dark Fantasy FitRPG</title>
+  <title>Без названия</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -11,51 +11,63 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="dark-fantasy-theme">
 
   <div id="damage-flash"></div>
+  <div id="event-banner" class="banner-overlay"></div>
+  <div id="toast-container"></div>
 
   <!-- ОНБОРДИНГ -->
   <div id="screen-onboarding" class="screen active">
     <div class="fantasy-card">
-      <h1 class="gothic-title">⚔️ ЕЩЁ НЕ ПРИДУМАЛ НАЗВАНИЕ ⚔️</h1>
-      <p class="gothic-subtitle">ОЧИСТИ ПОДЗЕМЕЛЬЕ СВОЕЙ СИЛОЙ</p>
+      <div class="card-embers"></div>
+      <div class="card-content">
+        <h1 class="gothic-title">⚔️ БЕЗДНА: КЛИНОК И ПЛОТЬ ⚔️</h1>
+        <p class="gothic-subtitle">6 ГЛАВ · 30 ИСПЫТАНИЙ · ТВОЁ ТЕЛО — ТВОЁ ОРУЖИЕ</p>
 
-      <form id="health-form">
-        <div class="form-group">
-          <label>Ранг воина (Уровень подготовки):</label>
-          <select id="fitness-level">
-            <option value="beginner">Оруженосец (Новичок)</option>
-            <option value="medium">Рыцарь Тьмы (Средний)</option>
-            <option value="pro">Лорд Бездны (Продвинутый)</option>
-          </select>
+        <form id="health-form">
+          <div class="form-group">
+            <label>Ранг воина (Уровень подготовки):</label>
+            <select id="fitness-level">
+              <option value="beginner">Оруженосец (Новичок)</option>
+              <option value="medium" selected>Рыцарь Тьмы (Средний)</option>
+              <option value="pro">Лорд Бездны (Продвинутый)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Ограничения по здоровью:</label>
+            <select id="health-issues">
+              <option value="none">Готов к бою (Без ограничений)</option>
+              <option value="knees">Травмы коленей</option>
+              <option value="wrists">Боль в суставах кистей</option>
+              <option value="back">Проблемы со спиной</option>
+            </select>
+          </div>
+
+          <button type="submit" class="fantasy-btn glow-btn">ВОЙТИ В БЕЗДНУ 💀</button>
+        </form>
+
+        <div id="continue-panel" class="continue-panel" style="display:none;">
+          <p class="continue-info" id="continue-info"></p>
+          <button type="button" id="btn-continue" class="fantasy-btn glow-btn">⚔️ ПРОДОЛЖИТЬ ПУТЬ</button>
+          <button type="button" id="btn-restart-link" class="link-btn danger-link">Начать заново</button>
         </div>
-
-        <div class="form-group">
-          <label>Ограничения по здоровью:</label>
-          <select id="health-issues">
-            <option value="none">Готов к бою (Без ограничений)</option>
-            <option value="knees">Травмы коленей</option>
-            <option value="wrists">Боль в суставах кистей</option>
-            <option value="back">Проблемы со спиной</option>
-          </select>
-        </div>
-
-        <button type="submit" class="fantasy-btn glow-btn">ВОЙТИ В БЕЗДНУ 💀</button>
-      </form>
+      </div>
     </div>
   </div>
 
 
   <!-- ИГРОВАЯ АРЕНА -->
   <div id="screen-game" class="screen">
-    
+
     <div id="tab-arena" class="tab-content active">
-      
+
       <div class="fantasy-hud-top">
-        <div class="hud-card player-hud">
+        <div class="hud-card player-hud" id="player-hud-card">
           <div class="hud-title">🗡️ РЫЦАРЬ</div>
           <div class="bar-outer">
             <div id="player-hp-fill" class="bar-inner player-hp" style="width: 100%;"></div>
@@ -72,11 +84,15 @@
         </div>
       </div>
 
+      <div class="arena-toolbar">
+        <span class="chapter-mini" id="chapter-mini">ГЛАВА I</span>
+        <button id="btn-retreat" class="btn-retreat" onclick="retreatToCamp()">🏃 ОТСТУПИТЬ В ЛАГЕРЬ</button>
+      </div>
+
       <div id="arena-bg" class="arena-viewport chapter-1">
         <div class="chapter-badge" id="chapter-title">ГЛАВА I: ШЕПЧУЩИЙ ЛЕС</div>
 
         <div class="monster-viewport">
-          <!-- Крупная иконка монстра с подложкой -->
           <div class="icon-frame monster-frame">
             <div id="monster-sprite" class="huge-icon">🧟</div>
           </div>
@@ -93,7 +109,6 @@
         </button>
       </div>
 
-      <!-- КАМЕРА С АТРИБУТАМИ АВТОЗАПУСКА ДЛЯ TELEGRAM -->
       <div class="camera-wrapper">
         <video id="webcam" autoplay muted playsinline style="display:none;"></video>
         <canvas id="canvas"></canvas>
@@ -112,6 +127,39 @@
       <div class="stats-panel">
         <div>ПОВТОРЫ: <strong id="rep-count">💪 0 | 🦵 0</strong></div>
         <div>ПОЗА: <strong id="pose-status">ИНИЦИАЛИЗАЦИЯ...</strong></div>
+      </div>
+    </div>
+
+    <!-- ЛАГЕРЬ -->
+    <div id="tab-camp" class="tab-content">
+      <div class="camp-panel">
+        <div class="camp-fire">🔥</div>
+        <h2 class="section-title">ЛАГЕРЬ У ВХОДА В ПОДЗЕМЕЛЬЕ</h2>
+        <p class="camp-flavor">Здесь безопасно. Пока вы отдыхаете у костра, ни один враг вас не тронет — здоровье восстанавливается само.</p>
+
+        <div class="hud-card player-hud camp-hp-card" id="camp-hp-card">
+          <div class="hud-title">🗡️ ЗДОРОВЬЕ РЫЦАРЯ</div>
+          <div class="bar-outer">
+            <div id="camp-hp-fill" class="bar-inner player-hp" style="width:100%;"></div>
+            <span id="camp-hp-text">100 / 100 HP</span>
+          </div>
+        </div>
+
+        <div class="camp-stats-grid">
+          <div class="camp-stat"><span class="camp-stat-label">Глава</span><span id="camp-chapter" class="camp-stat-val">I / VI</span></div>
+          <div class="camp-stat"><span class="camp-stat-label">Уровень</span><span id="camp-level" class="camp-stat-val">1 / 30</span></div>
+          <div class="camp-stat"><span class="camp-stat-label">Золото</span><span id="camp-gold" class="camp-stat-val">0 💎</span></div>
+          <div class="camp-stat"><span class="camp-stat-label">Повторы</span><span id="camp-reps" class="camp-stat-val">0</span></div>
+        </div>
+
+        <button id="btn-return-battle" class="fantasy-btn glow-btn" onclick="showTab('arena')">⚔️ ВЕРНУТЬСЯ В БОЙ</button>
+
+        <div id="camp-victory-panel" class="camp-victory-panel" style="display:none;">
+          <p>🔱 Бездна покорена! Начните Новую Игру+ и пройдите всех врагов заново на новом витке легенды — снаряжение и трофеи сохранятся.</p>
+          <button type="button" id="btn-new-game-plus" class="fantasy-btn">🔄 НОВАЯ ИГРА+</button>
+        </div>
+
+        <button type="button" id="btn-full-reset" class="link-btn danger-link">Полный сброс прогресса</button>
       </div>
     </div>
 
@@ -135,6 +183,7 @@
 
     <div class="bottom-nav">
       <button onclick="showTab('arena')" id="nav-arena" class="nav-btn active">⚔️ БОЙ</button>
+      <button onclick="showTab('camp')" id="nav-camp" class="nav-btn">🏕️ ЛАГЕРЬ</button>
       <button onclick="showTab('shop')" id="nav-shop" class="nav-btn">🛒 ЛАВКА</button>
       <button onclick="showTab('achievements')" id="nav-achievements" class="nav-btn">🏆 ТРОФЕИ</button>
     </div>
