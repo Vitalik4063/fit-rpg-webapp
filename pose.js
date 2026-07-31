@@ -12,7 +12,6 @@ function resetExerciseStage() {
   poseState.stage = "UP";
 }
 
-// Расчет угла между тремя точками A-B-C
 function calculateAngle(A, B, C) {
   const radians = Math.atan2(C.y - B.y, C.x - B.x) - Math.atan2(A.y - B.y, A.x - B.x);
   let angle = Math.abs((radians * 180.0) / Math.PI);
@@ -20,9 +19,8 @@ function calculateAngle(A, B, C) {
   return Math.round(angle);
 }
 
-// Отрисовка линии между узлами
-function drawBone(ctx, p1, p2, color = "#d4af37", width = 3) {
-  if (!p1 || !p2 || p1.visibility < 0.5 || p2.visibility < 0.5) return;
+function drawBone(ctx, p1, p2, color = "#c9a050", width = 3) {
+  if (!p1 || !p2 || p1.visibility < 0.4 || p2.visibility < 0.4) return;
   ctx.beginPath();
   ctx.moveTo(p1.x * ctx.canvas.width, p1.y * ctx.canvas.height);
   ctx.lineTo(p2.x * ctx.canvas.width, p2.y * ctx.canvas.height);
@@ -31,61 +29,56 @@ function drawBone(ctx, p1, p2, color = "#d4af37", width = 3) {
   ctx.stroke();
 }
 
-// Отрисовка точки сустава
-function drawJointPoint(ctx, p, color = "#ff2222", radius = 5) {
-  if (!p || p.visibility < 0.5) return;
+function drawJointPoint(ctx, p, color = "#c93b3b", radius = 5) {
+  if (!p || p.visibility < 0.4) return;
   ctx.beginPath();
   ctx.arc(p.x * ctx.canvas.width, p.y * ctx.canvas.height, radius, 0, 2 * Math.PI);
   ctx.fillStyle = color;
   ctx.fill();
 }
 
-// Отрисовка ДУГИ УГЛА непосредственно на суставе
 function drawAngleArc(ctx, B, angle, targetAngle) {
-  if (!B || B.visibility < 0.5) return;
+  if (!B || B.visibility < 0.4) return;
   const x = B.x * ctx.canvas.width;
   const y = B.y * ctx.canvas.height;
   const isReached = angle <= targetAngle;
   
   ctx.save();
   ctx.beginPath();
-  ctx.arc(x, y, 25, 0, (angle * Math.PI) / 180, false);
+  ctx.arc(x, y, 22, 0, (angle * Math.PI) / 180, false);
   ctx.strokeStyle = isReached ? "#2ecc71" : "#c93b3b";
   ctx.lineWidth = 4;
   ctx.stroke();
 
-  // Текст угла над суставом
-  ctx.font = "bold 14px Georgia";
-  ctx.fillStyle = isReached ? "#2ecc71" : "#f1c40f";
-  ctx.fillText(`${angle}°`, x + 15, y - 15);
+  ctx.font = "bold 13px Georgia";
+  ctx.fillStyle = isReached ? "#2ecc71" : "#c9a050";
+  ctx.fillText(`${angle}°`, x + 12, y - 12);
   ctx.restore();
 }
 
-// Отрисовка ПОЛНОГО СКЕЛЕТА
-function drawFullSkeleton(ctx, lm, activeJointColor) {
-  // Плечевой пояс и Торс
-  drawBone(ctx, lm[11], lm[12], "#d4af37", 3); // Плечи
-  drawBone(ctx, lm[11], lm[23], "#d4af37", 3); // Левый бок
-  drawBone(ctx, lm[12], lm[24], "#d4af37", 3); // Правый бок
-  drawBone(ctx, lm[23], lm[24], "#d4af37", 3); // Таз
+// ОХВАТЫВАЕТ ВЕСЬ СКЕЛЕТ (РУКИ, НОГИ, ТОРС)
+function drawFullSkeleton(ctx, lm, activeColor) {
+  // Плечи и Торс
+  drawBone(ctx, lm[11], lm[12], "#c9a050", 3);
+  drawBone(ctx, lm[11], lm[23], "#c9a050", 3);
+  drawBone(ctx, lm[12], lm[24], "#c9a050", 3);
+  drawBone(ctx, lm[23], lm[24], "#c9a050", 3);
 
-  // Левая рука
-  drawBone(ctx, lm[11], lm[13], currentExercise === 'pushup' ? activeJointColor : "#d4af37", 4);
-  drawBone(ctx, lm[13], lm[15], currentExercise === 'pushup' ? activeJointColor : "#d4af37", 4);
+  // Руки
+  const armColor = currentExercise === 'pushup' ? activeColor : "#c9a050";
+  drawBone(ctx, lm[11], lm[13], armColor, 4);
+  drawBone(ctx, lm[13], lm[15], armColor, 4);
+  drawBone(ctx, lm[12], lm[14], armColor, 4);
+  drawBone(ctx, lm[14], lm[16], armColor, 4);
 
-  // Правая рука
-  drawBone(ctx, lm[12], lm[14], currentExercise === 'pushup' ? activeJointColor : "#d4af37", 4);
-  drawBone(ctx, lm[14], lm[16], currentExercise === 'pushup' ? activeJointColor : "#d4af37", 4);
+  // Ноги
+  const legColor = currentExercise === 'squat' ? activeColor : "#c9a050";
+  drawBone(ctx, lm[23], lm[25], legColor, 4);
+  drawBone(ctx, lm[25], lm[27], legColor, 4);
+  drawBone(ctx, lm[24], lm[26], legColor, 4);
+  drawBone(ctx, lm[26], lm[28], legColor, 4);
 
-  // Левая нога
-  drawBone(ctx, lm[23], lm[25], currentExercise === 'squat' ? activeJointColor : "#d4af37", 4);
-  drawBone(ctx, lm[25], lm[27], currentExercise === 'squat' ? activeJointColor : "#d4af37", 4);
-
-  // Правая нога
-  drawBone(ctx, lm[24], lm[26], currentExercise === 'squat' ? activeJointColor : "#d4af37", 4);
-  drawBone(ctx, lm[26], lm[28], currentExercise === 'squat' ? activeJointColor : "#d4af37", 4);
-
-  // Точки ключевых суставов
+  // Суставы
   [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28].forEach(idx => {
     drawJointPoint(ctx, lm[idx], "#c93b3b", 4);
   });
@@ -112,51 +105,44 @@ function processPose(landmarks, ctx) {
   const statusEl = document.getElementById('pose-status');
   const cfg = CONFIG[currentExercise];
 
-  // Выбор ключевой конечности для измерения угла
   let A, B, C;
   if (currentExercise === 'pushup') {
-    A = landmarks[11]; B = landmarks[13]; C = landmarks[15]; // Левый локоть
+    A = landmarks[11]; B = landmarks[13]; C = landmarks[15];
   } else {
-    A = landmarks[23]; B = landmarks[25]; C = landmarks[27]; // Левое колено
+    A = landmarks[23]; B = landmarks[25]; C = landmarks[27];
   }
 
-  // 1. Проверка видимости
-  if (!A || !B || !C || A.visibility < 0.55 || B.visibility < 0.55 || C.visibility < 0.55) {
-    statusEl.innerText = "ВСТАНЬТЕ В КАДР ПОЛНОСТЬЮ";
+  if (!A || !B || !C || A.visibility < 0.4 || B.visibility < 0.4 || C.visibility < 0.4) {
+    statusEl.innerText = "ВСТАНЬТЕ В КАДР";
     statusEl.style.color = "#c93b3b";
-    // Все равно рисуем доступные части скелета
-    drawFullSkeleton(ctx, landmarks, "#888888");
+    drawFullSkeleton(ctx, landmarks, "#666666");
     return;
   }
 
-  // 2. Расчет угла и дистанции до пола
   const currentAngle = calculateAngle(A, B, C);
   const nose = landmarks[0];
   const floorDistPct = nose ? Math.round((1 - nose.y) * 100) : 100;
 
-  // 3. Проверка правильности исходного положения (Упор лёжа / Стойка)
   if (currentExercise === 'pushup') {
     const hip = landmarks[23];
-    const isPlank = Math.abs(A.y - hip.y) < 0.38;
+    const isPlank = Math.abs(A.y - hip.y) < 0.40;
     if (!isPlank) {
       statusEl.innerText = "ПРИНЯТЬ УПОР ЛЁЖА!";
-      statusEl.style.color = "#f1c40f";
-      drawFullSkeleton(ctx, landmarks, "#f1c40f");
+      statusEl.style.color = "#c9a050";
+      drawFullSkeleton(ctx, landmarks, "#c9a050");
       return;
     }
   }
 
-  // 4. Отрисовка скелета и дуги угла
-  const activeColor = currentAngle <= cfg.downAngle ? "#2ecc71" : "#f1c40f";
+  const activeColor = currentAngle <= cfg.downAngle ? "#2ecc71" : "#c9a050";
   drawFullSkeleton(ctx, landmarks, activeColor);
   drawAngleArc(ctx, B, currentAngle, cfg.downAngle);
   updateAngleHUD(currentAngle, cfg.downAngle, floorDistPct);
 
-  // 5. Контроллер состояния (UP -> DOWN -> UP)
   if (currentAngle >= cfg.upAngle) {
     poseState.stage = "UP";
     statusEl.innerText = "ГОТОВ (ОПУСКАЙСЯ)";
-    statusEl.style.color = "#f1c40f";
+    statusEl.style.color = "#c9a050";
   }
 
   if (currentAngle <= cfg.downAngle && floorDistPct <= cfg.maxFloorDistPct && poseState.stage === "UP") {
@@ -167,6 +153,7 @@ function processPose(landmarks, ctx) {
   }
 }
 
+// НАДЕЖНАЯ ИНИЦИАЛИЗАЦИЯ КАМЕРЫ ДЛЯ MOBILE & TELEGRAM
 function initCamera() {
   const videoElement = document.getElementById('webcam');
   const canvasElement = document.getElementById('canvas');
@@ -179,8 +166,8 @@ function initCamera() {
   pose.setOptions({
     modelComplexity: 1,
     smoothLandmarks: true,
-    minDetectionConfidence: 0.6,
-    minTrackingConfidence: 0.6
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5
   });
 
   pose.onResults((results) => {
@@ -188,7 +175,6 @@ function initCamera() {
     canvasElement.height = videoElement.videoHeight || 480;
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-    // Отрисовка видео
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
     if (results.poseLandmarks) {
@@ -196,10 +182,23 @@ function initCamera() {
     }
   });
 
-  const camera = new Camera(videoElement, {
-    onFrame: async () => { await pose.send({ image: videoElement }); },
-    width: 640,
-    height: 480
-  });
-  camera.start();
+  // Запуск камеры с обработкой прямого доступа к устройству
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+      .then((stream) => {
+        videoElement.srcObject = stream;
+        videoElement.play();
+        
+        const camera = new Camera(videoElement, {
+          onFrame: async () => { await pose.send({ image: videoElement }); },
+          width: 640,
+          height: 480
+        });
+        camera.start();
+      })
+      .catch((err) => {
+        console.error("Ошибка камеры:", err);
+        document.getElementById('pose-status').innerText = "ОШИБКА ДОСТУПА К КАМЕРЕ";
+      });
+  }
 }
