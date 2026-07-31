@@ -8,7 +8,8 @@ const CONFIG = {
   squat:  { downAngle: 100 + DIFFICULTY_ADJUST, upAngle: 155, maxFloorDistPct: 50 + FLOOR_ADJUST }
 };
 
-let globalPose = null; // Глобальный инстанс сети
+let globalPose = null; 
+let isProcessing = false; // ПРЕДОХРАНИТЕЛЬ ОТ ЗАВИСАНИЯ И ПЕРЕГРУЗКИ
 
 function resetExerciseStage() { poseState.stage = "UP"; }
 
@@ -19,6 +20,7 @@ function calculateAngle(A, B, C) {
   return Math.round(angle);
 }
 
+// Отрисовка скелета
 function drawBone(ctx, p1, p2, color = "#00e5ff", width = 4) {
   if (!p1 || !p2 || p1.visibility < 0.3 || p2.visibility < 0.3) return;
   ctx.beginPath();
@@ -83,24 +85,33 @@ function processPose(landmarks, ctx) {
   }
 }
 
-// Функции управления камерой
+// Глубокая остановка камеры и очистка памяти
 window.stopCamera = function() {
   if (window.__activeCamera) {
-    window.__activeCamera.stop();
+    try { window.__activeCamera.stop(); } catch(e) {}
     window.__activeCamera = null;
   }
   const videoElement = document.getElementById('webcam');
-  if (videoElement && videoElement.srcObject) {
-    videoElement.srcObject.getTracks().forEach(track => track.stop());
-    videoElement.srcObject = null;
+  if (videoElement) {
+    if (videoElement.srcObject) {
+      videoElement.srcObject.getTracks().forEach(track => track.stop());
+      videoElement.srcObject = null;
+    }
+    videoElement.pause();
+    videoElement.removeAttribute('src'); 
+    videoElement.load(); // Жесткий сброс элемента
   }
+  if (globalPose) {
+    try { globalPose.reset(); } catch(e) {} // Сброс стейта ИИ
+  }
+  isProcessing = false;
 }
 
 window.restartCamera = function() {
   const statusEl = document.getElementById('pose-status');
   if(statusEl) { statusEl.innerText = "Запуск камеры..."; statusEl.style.color = "#00e5ff"; }
-  stopCamera();
-  setTimeout(initCamera, 400);
+  window.stopCamera();
+  setTimeout(initCamera, 500); // Полсекунды ожидания для разблокировки железа
 }
 
 function initCamera() {
@@ -109,7 +120,9 @@ function initCamera() {
   const canvasCtx = canvasElement.getContext('2d');
   
   if (typeof Pose === 'undefined' || typeof Camera === 'undefined') {
-    console.error("MediaPipe не загружен"); return;
+    const statusEl = document.getElementById('pose-status');
+    if(statusEl) { statusEl.innerText = "Сбой загрузки ядра"; statusEl.style.color = "#ff2a40"; }
+    return;
   }
   
   if (!globalPose) {
@@ -117,12 +130,16 @@ function initCamera() {
     globalPose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
     
     globalPose.onResults((results) => {
+      isProcessing = false; // Снимаем предохранитель только после завершения кадра
+      
+      if (!window.__arenaActive) return;
+
       canvasElement.width = videoElement.videoWidth || 640;
       canvasElement.height = videoElement.videoHeight || 480;
       canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
       canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
       
-      if (results.poseLandmarks && window.__arenaActive) {
+      if (results.poseLandmarks) {
         processPose(results.poseLandmarks, canvasCtx);
       }
     });
@@ -130,8 +147,15 @@ function initCamera() {
 
   window.__activeCamera = new Camera(videoElement, { 
     onFrame: async () => { 
-      if (window.__arenaActive && videoElement.readyState >= 2) {
-        await globalPose.send({ image: videoElement }); 
+      // ЖЕСТКИЙ ПРЕДОХРАНИТЕЛЬ: Игнорируем кадры, если предыдущий еще обрабатывается
+      if (window.__arenaActive && videoElement.readyState >= 2 && !isProcessing) {
+        isProcessing = true;
+        try {
+          await globalPose.send({ image: videoElement }); 
+        } catch (err) {
+          console.error("Ошибка ИИ: ", err);
+          isProcessing = false; // Освобождаем принудительно в случае ошибки
+        }
       }
     }, 
     facingMode: 'user', width: 640, height: 480 
@@ -139,6 +163,6 @@ function initCamera() {
   
   window.__activeCamera.start().catch(err => {
     const statusEl = document.getElementById('pose-status');
-    if(statusEl) { statusEl.innerText = "Камера заблокирована"; statusEl.style.color = "#ff2a40"; }
+    if(statusEl) { statusEl.innerText = "Доступ к камере закрыт"; statusEl.style.color = "#ff2a40"; }
   });
 }
