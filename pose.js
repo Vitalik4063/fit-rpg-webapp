@@ -17,7 +17,7 @@ function calculateAngle(A, B, C) {
   return Math.round(angle);
 }
 
-// Функции для отрисовки линий скелета (AI Tracker)
+// Отрисовка скелета
 function drawBone(ctx, p1, p2, color = "#ffef9f", width = 4) {
   if (!p1 || !p2 || p1.visibility < 0.3 || p2.visibility < 0.3) return;
   ctx.beginPath();
@@ -66,7 +66,7 @@ function processPose(landmarks, ctx) {
 
   if (!A || !B || !C || A.visibility < 0.4) {
     statusEl.innerText = "ВСТАНЬТЕ В КАДР"; statusEl.style.color = "#f02a2a";
-    drawFullSkeleton(ctx, landmarks, "#555"); // Отрисовка серым, если не готов
+    drawFullSkeleton(ctx, landmarks, "#555"); // Отрисовка серым, если игрок вне позиции
     return;
   }
   
