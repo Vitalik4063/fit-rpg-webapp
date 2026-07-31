@@ -14,7 +14,6 @@ body.dark-fantasy-theme {
 .tab-content { display: none; padding-bottom: 60px; }
 .tab-content.active { display: block; }
 
-/* DARK FANTASY CARDS & UI */
 .fantasy-card {
   background: #12090b;
   border: 2px solid #5a191b;
@@ -47,7 +46,7 @@ select {
 }
 .glow-btn { box-shadow: 0 0 15px rgba(139, 40, 43, 0.6); }
 
-/* HUD STATUS BARS */
+/* DUAL HUD BARS */
 .fantasy-hud-top { display: flex; gap: 6px; margin-bottom: 6px; }
 .hud-card { flex: 1; background: #0e0708; border: 1px solid #361416; padding: 5px; border-radius: 4px; }
 .hud-title { font-size: 10px; font-weight: bold; color: #c9a050; margin-bottom: 3px; }
@@ -63,11 +62,11 @@ select {
   font-size: 10px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000;
 }
 
-/* ARENA VIEWPORT & SPRITES */
+/* ARENA & MONSTER FRAME */
 .arena-viewport {
-  position: relative; width: 100%; height: 210px; border: 2px solid #5a191b;
-  border-radius: 6px; overflow: hidden; background: #080405; display: flex;
-  flex-direction: column; align-items: center; justify-content: space-between; padding: 6px;
+  position: relative; width: 100%; height: 200px; border: 2px solid #5a191b;
+  border-radius: 6px; overflow: hidden; background: radial-gradient(circle, #1a080a 0%, #050203 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 6px;
 }
 
 .chapter-badge {
@@ -80,15 +79,28 @@ select {
   justify-content: center; align-items: center;
 }
 
-.fantasy-sprite img {
-  width: 96px; height: 96px; image-rendering: pixelated;
-  filter: drop-shadow(0 8px 10px rgba(0,0,0,0.9));
+/* КРАСИВЫЕ ФЭНТЕЗИ-ПОДЛОЖКИ ДЛЯ ИКОНОК */
+.icon-frame {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle, #2d1013 0%, #0a0405 100%);
+  border: 2px solid #c9a050; border-radius: 8px;
+  box-shadow: inset 0 0 10px #000, 0 0 12px rgba(201, 160, 80, 0.3);
+}
+
+.monster-frame {
+  width: 100px; height: 100px; border-color: #c93b3b;
+  box-shadow: inset 0 0 15px #5a191b, 0 0 20px rgba(201, 59, 59, 0.5);
+}
+
+.huge-icon {
+  font-size: 64px; line-height: 1;
+  filter: drop-shadow(0 4px 6px #000);
   animation: fantasyFloat 2s ease-in-out infinite alternate;
 }
 
 @keyframes fantasyFloat {
   0% { transform: translateY(0); }
-  100% { transform: translateY(-8px); }
+  100% { transform: translateY(-6px); }
 }
 
 .monster-hit-anim { animation: fantasyDamage 0.22s ease-in-out !important; }
@@ -156,8 +168,31 @@ select {
 .nav-btn { background: none; border: none; color: #555; font-size: 12px; font-weight: bold; cursor: pointer; }
 .nav-btn.active { color: #c9a050; text-shadow: 0 0 5px #c9a050; }
 
-.shop-list { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
-.shop-item { display: flex; justify-content: space-between; align-items: center; background: #12090b; padding: 8px; border: 1px solid #333; border-radius: 4px; }
+/* МАГАЗИН И БОЛЬШИЕ ИКОНКИ С ФОНОМ */
+.section-title { font-size: 16px; color: #c9a050; text-align: center; margin-bottom: 6px; }
+.gold-balance { text-align: center; font-size: 13px; margin-bottom: 12px; }
+.shop-list { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+
+.shop-item {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #12090b; padding: 10px; border: 1px solid #361416; border-radius: 6px;
+}
 .shop-item.equipped { border-color: #2ecc71; background: #0a1f12; }
-.gold-text { color: #c9a050; }
-.mineral-icon { width: 24px; height: 24px; vertical-align: middle; margin-right: 6px; }
+
+.shop-item-info { display: flex; align-items: center; gap: 12px; }
+.shop-icon-frame {
+  width: 52px; height: 52px; font-size: 32px;
+}
+
+.btn-buy {
+  padding: 8px 12px; background: #5a191b; border: 1px solid #c9a050;
+  color: #fff; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 12px;
+}
+.btn-buy:disabled { background: #222; border-color: #555; color: #888; }
+
+.achievements-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.achieve-card {
+  background: #12090b; border: 1px solid #361416; padding: 10px;
+  border-radius: 6px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.achieve-card.unlocked { border-color: #c9a050; background: #1f1408; }
