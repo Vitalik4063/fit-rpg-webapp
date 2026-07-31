@@ -56,24 +56,6 @@
   <div id="screen-game" class="screen">
     <div id="tab-arena" class="tab-content active">
 
-      <div class="fantasy-hud-top">
-        <div class="hud-card player-hud" id="player-hud-card">
-          <div class="hud-title">🗡️ РЫЦАРЬ</div>
-          <div class="bar-outer">
-            <div id="player-hp-fill" class="bar-inner player-hp" style="width: 100%;"></div>
-            <span id="player-hp-text">100 / 100 HP</span>
-          </div>
-        </div>
-
-        <div class="hud-card enemy-hud">
-          <div class="hud-title" id="monster-name">ТВАРЬ БЕЗДНЫ</div>
-          <div class="bar-outer">
-            <div id="monster-hp-fill" class="bar-inner enemy-hp" style="width: 100%;"></div>
-            <span id="monster-hp-text">50 / 50 HP</span>
-          </div>
-        </div>
-      </div>
-
       <div class="arena-toolbar">
         <span class="chapter-mini" id="chapter-mini">ГЛАВА I</span>
         <button id="btn-retreat" class="btn-retreat" onclick="retreatToCamp()">🏃 ОТСТУПИТЬ</button>
@@ -87,6 +69,25 @@
             <div id="monster-sprite" class="huge-icon floating-anim">🧟</div>
           </div>
           <div id="damage-popup-container"></div>
+        </div>
+      </div>
+
+      <!-- КРУПНЫЕ ПОЛОСКИ ЗДОРОВЬЯ СНИЗУ -->
+      <div class="fantasy-hud-bottom">
+        <div class="hud-card player-hud" id="player-hud-card">
+          <div class="hud-title glow-text">🗡️ ВАШЕ ЗДОРОВЬЕ</div>
+          <div class="bar-outer">
+            <div id="player-hp-fill" class="bar-inner player-hp" style="width: 100%;"></div>
+            <span id="player-hp-text">100 / 100 HP</span>
+          </div>
+        </div>
+
+        <div class="hud-card enemy-hud">
+          <div class="hud-title glow-text" id="monster-name">ТВАРЬ БЕЗДНЫ</div>
+          <div class="bar-outer">
+            <div id="monster-hp-fill" class="bar-inner enemy-hp" style="width: 100%;"></div>
+            <span id="monster-hp-text">50 / 50 HP</span>
+          </div>
         </div>
       </div>
 
@@ -130,10 +131,10 @@
         <p class="camp-flavor">Пламя костра согревает тело. Здоровье восстанавливается автоматически.</p>
 
         <div class="hud-card player-hud camp-hp-card" id="camp-hp-card">
-          <div class="hud-title">❤️ ВАШЕ ЗДОРОВЬЕ</div>
-          <div class="bar-outer" style="height: 22px;">
+          <div class="hud-title glow-text">❤️ ВАШЕ ЗДОРОВЬЕ</div>
+          <div class="bar-outer">
             <div id="camp-hp-fill" class="bar-inner player-hp" style="width:100%;"></div>
-            <span id="camp-hp-text" style="font-size: 13px; line-height: 20px;">100 / 100 HP</span>
+            <span id="camp-hp-text">100 / 100 HP</span>
           </div>
         </div>
 
@@ -177,7 +178,7 @@
       <div id="achievements-list" class="achievements-grid"></div>
     </div>
 
-    <!-- КРУПНОЕ НИЖНЕЕ МЕНЮ -->
+    <!-- КРУПНОЕ НИЖНЕЕ МЕНЮ С ПОДСВЕТКОЙ -->
     <div class="bottom-nav">
       <button onclick="showTab('arena')" id="nav-arena" class="nav-btn active">
         <span class="nav-icon">⚔️</span>
