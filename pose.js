@@ -18,7 +18,7 @@ function calculateAngle(A, B, C) {
 }
 
 // Отрисовка скелета
-function drawBone(ctx, p1, p2, color = "#ffef9f", width = 4) {
+function drawBone(ctx, p1, p2, color = "#00e5ff", width = 4) {
   if (!p1 || !p2 || p1.visibility < 0.3 || p2.visibility < 0.3) return;
   ctx.beginPath();
   ctx.moveTo(p1.x * ctx.canvas.width, p1.y * ctx.canvas.height);
@@ -28,7 +28,7 @@ function drawBone(ctx, p1, p2, color = "#ffef9f", width = 4) {
   ctx.stroke();
 }
 
-function drawJointPoint(ctx, p, color = "#f02a2a", radius = 5) {
+function drawJointPoint(ctx, p, color = "#9d4edd", radius = 5) {
   if (!p || p.visibility < 0.3) return;
   ctx.beginPath();
   ctx.arc(p.x * ctx.canvas.width, p.y * ctx.canvas.height, radius, 0, 2 * Math.PI);
@@ -38,18 +38,18 @@ function drawJointPoint(ctx, p, color = "#f02a2a", radius = 5) {
 
 function drawFullSkeleton(ctx, lm, activeColor) {
   // Торс
-  drawBone(ctx, lm[11], lm[12], "#d4af37", 3);
-  drawBone(ctx, lm[11], lm[23], "#d4af37", 3);
-  drawBone(ctx, lm[12], lm[24], "#d4af37", 3);
-  drawBone(ctx, lm[23], lm[24], "#d4af37", 3);
+  drawBone(ctx, lm[11], lm[12], "#5a189a", 3);
+  drawBone(ctx, lm[11], lm[23], "#5a189a", 3);
+  drawBone(ctx, lm[12], lm[24], "#5a189a", 3);
+  drawBone(ctx, lm[23], lm[24], "#5a189a", 3);
 
   // Руки (выделяются при отжиманиях)
-  const armColor = currentExercise === 'pushup' ? activeColor : "#d4af37";
+  const armColor = currentExercise === 'pushup' ? activeColor : "#5a189a";
   drawBone(ctx, lm[11], lm[13], armColor, 5); drawBone(ctx, lm[13], lm[15], armColor, 5);
   drawBone(ctx, lm[12], lm[14], armColor, 5); drawBone(ctx, lm[14], lm[16], armColor, 5);
 
   // Ноги (выделяются при приседаниях)
-  const legColor = currentExercise === 'squat' ? activeColor : "#d4af37";
+  const legColor = currentExercise === 'squat' ? activeColor : "#5a189a";
   drawBone(ctx, lm[23], lm[25], legColor, 5); drawBone(ctx, lm[25], lm[27], legColor, 5);
   drawBone(ctx, lm[24], lm[26], legColor, 5); drawBone(ctx, lm[26], lm[28], legColor, 5);
 
@@ -65,8 +65,8 @@ function processPose(landmarks, ctx) {
   else { A = landmarks[23]; B = landmarks[25]; C = landmarks[27]; }
 
   if (!A || !B || !C || A.visibility < 0.4) {
-    statusEl.innerText = "ВСТАНЬТЕ В КАДР"; statusEl.style.color = "#f02a2a";
-    drawFullSkeleton(ctx, landmarks, "#555"); // Отрисовка серым, если игрок вне позиции
+    statusEl.innerText = "Ищу тебя в кадре..."; statusEl.style.color = "#8888a0";
+    drawFullSkeleton(ctx, landmarks, "#333"); 
     return;
   }
   
@@ -77,12 +77,12 @@ function processPose(landmarks, ctx) {
   document.getElementById('angle-meter-fill').style.width = `${Math.min(100, (currentAngle/180)*100)}%`;
 
   // Подсветка скелета
-  const activeColor = currentAngle <= cfg.downAngle ? "#39e079" : "#ffef9f";
+  const activeColor = currentAngle <= cfg.downAngle ? "#00e5ff" : "#9d4edd";
   drawFullSkeleton(ctx, landmarks, activeColor);
 
-  if (currentAngle >= cfg.upAngle) { poseState.stage = "UP"; statusEl.innerText = "ГОТОВ (ОПУСКАЙСЯ)"; statusEl.style.color = "#ffef9f"; }
+  if (currentAngle >= cfg.upAngle) { poseState.stage = "UP"; statusEl.innerText = "Опускайся"; statusEl.style.color = "#9d4edd"; }
   if (currentAngle <= cfg.downAngle && floorDistPct <= cfg.maxFloorDistPct && poseState.stage === "UP") {
-    poseState.stage = "DOWN"; statusEl.innerText = "ОТЛИЧНО! ВСТАВАЙ!"; statusEl.style.color = "#39e079";
+    poseState.stage = "DOWN"; statusEl.innerText = "Вставай!"; statusEl.style.color = "#00e5ff";
     if (typeof onRepCompleted === 'function') onRepCompleted(currentExercise);
   }
 }
