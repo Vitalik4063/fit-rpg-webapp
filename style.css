@@ -1,99 +1,167 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'Courier New', Courier, monospace;
-  background-color: #050507;
-  color: #ffffff;
-  padding: 5px;
+
+body.doom-theme {
+  font-family: 'Courier New', Courier, monospace, sans-serif;
+  background-color: #050505;
+  color: #00ff00;
+  padding: 8px;
   user-select: none;
   overflow-x: hidden;
 }
 
 .screen { display: none; }
 .screen.active { display: block; }
-.tab-content { display: none; padding-bottom: 60px; }
+.tab-content { display: none; padding-bottom: 65px; }
 .tab-content.active { display: block; }
 
-.doom-title { text-align: center; color: #ff2200; font-size: 24px; text-shadow: 2px 2px #000; letter-spacing: 1px; }
-.subtitle { text-align: center; font-size: 11px; color: #888; margin-bottom: 15px; }
-
-/* HUD DOOM Style */
-.hud-panel {
-  display: flex; justify-content: space-between; align-items: center;
-  background: #111116; border: 2px solid #333; padding: 6px; border-radius: 6px; margin-bottom: 6px;
+/* DOOM RETRO UI BOXES */
+.doom-box {
+  background: #111;
+  border: 3px solid #ff0000;
+  padding: 20px;
+  border-radius: 4px;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
+  text-align: center;
 }
-.hud-box { font-size: 11px; font-weight: bold; }
-.hud-label { display: block; font-size: 9px; color: #aaa; margin-bottom: 2px; }
+.doom-title { color: #ff0000; font-size: 24px; text-shadow: 2px 2px #550000; }
+.doom-subtitle { color: #ffff00; font-size: 12px; margin-bottom: 15px; }
 
-.hp-bar { position: relative; width: 90px; height: 14px; background: #222; border-radius: 4px; overflow: hidden; border: 1px solid #444; }
-.player-hp .hp-fill { background: linear-gradient(90deg, #2ecc71, #27ae60); }
-.enemy-hp .hp-fill { background: linear-gradient(90deg, #e74c3c, #c0392b); }
-.hp-bar span { position: absolute; top: 0; left: 0; right: 0; font-size: 10px; text-align: center; text-shadow: 1px 1px #000; }
-
-/* КРУПНАЯ АРЕНА И КАМЕРА В СТИЛЕ РЕТРО FPS */
-.arena-bg {
-  width: 100%;
-  height: 380px; /* Увеличено окно просмотра */
-  border-radius: 8px;
-  position: relative;
-  overflow: hidden;
-  border: 3px solid #ff2200;
-  background: #000;
+.form-group { margin-bottom: 15px; text-align: left; }
+label { display: block; font-size: 12px; color: #aaa; margin-bottom: 4px; }
+select {
+  width: 100%; padding: 10px; background: #000; border: 1px solid #ff0000;
+  color: #fff; font-family: monospace; font-size: 14px;
+}
+.doom-btn {
+  width: 100%; padding: 14px; background: #ff0000; color: #fff;
+  font-weight: bold; border: none; font-size: 16px; cursor: pointer;
+  box-shadow: 0 0 10px #ff0000;
 }
 
-.chapter-title { position: absolute; top: 6px; left: 6px; z-index: 10; font-size: 10px; color: #f1c40f; background: rgba(0,0,0,0.8); padding: 2px 6px; border-radius: 4px; }
-
-/* Красная вспышка при получении урона игроком */
-.damage-flash {
-  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(255, 0, 0, 0.4); z-index: 20; pointer-events: none; opacity: 0; transition: opacity 0.1s;
+/* TOP HUD BARS */
+.doom-hud-top {
+  display: flex; gap: 8px; margin-bottom: 8px;
 }
-.damage-flash.active { opacity: 1; }
-
-/* 2D DOOM Спрайт монстра поверх видео */
-.doom-monster-container {
-  position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-  z-index: 5; text-align: center; pointer-events: none;
+.stat-card {
+  flex: 1; background: #111; border: 1px solid #333; padding: 6px; border-radius: 4px;
 }
+.hud-label { font-size: 10px; font-weight: bold; color: #fff; margin-bottom: 4px; }
+.bar-container {
+  position: relative; width: 100%; height: 16px; background: #222; border: 1px solid #444; border-radius: 2px; overflow: hidden;
+}
+.bar-fill { height: 100%; transition: width 0.2s ease; }
+.bar-fill.player-hp { background: linear-gradient(90deg, #00aa00, #00ff00); }
+.bar-fill.enemy-hp { background: linear-gradient(90deg, #aa0000, #ff0000); }
+.bar-container span {
+  position: absolute; top: 1px; left: 0; right: 0; text-align: center; font-size: 10px; font-weight: bold; color: #fff; text-shadow: 1px 1px #000;
+}
+
+/* ARENA VIEWPORT & DOOM SPRITES */
+.arena-viewport {
+  position: relative; width: 100%; height: 210px; border: 2px solid #550000;
+  border-radius: 6px; overflow: hidden; background: #1a0505; display: flex;
+  flex-direction: column; align-items: center; justify-content: space-between; padding: 8px;
+}
+
+.crt-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+  background-size: 100% 4px; pointer-events: none; z-index: 5;
+}
+
+.chapter-badge {
+  font-size: 10px; color: #ffcc00; background: rgba(0, 0, 0, 0.8);
+  padding: 2px 8px; border: 1px solid #ffcc00; border-radius: 3px; z-index: 2;
+}
+
+.monster-viewport {
+  position: relative; width: 100%; height: 150px; display: flex;
+  justify-content: center; align-items: center;
+}
+
+/* 2.5D DOOM SPRITES STYLING */
 .doom-sprite {
-  font-size: 85px;
-  filter: drop-shadow(0 15px 10px rgba(0,0,0,0.9));
-  animation: doomHover 2s ease-in-out infinite alternate;
-}
-@keyframes doomHover {
-  0% { transform: scale(1) translateY(0); }
-  100% { transform: scale(1.05) translateY(-8px); }
+  font-size: 85px; line-height: 1; filter: drop-shadow(0 10px 8px rgba(0,0,0,0.9));
+  transition: transform 0.1s; animation: doomFloat 1.5s infinite alternate ease-in-out;
 }
 
-.monster-hit { animation: doomHit 0.2s ease-in-out !important; }
-@keyframes doomHit {
-  0% { transform: scale(1); filter: brightness(3) sepia(1) hue-rotate(-50deg); }
-  50% { transform: scale(0.85) rotate(-10deg); }
-  100% { transform: scale(1); }
+@keyframes doomFloat {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-8px) scale(1.05, 0.95); }
 }
 
-/* Вылетающий урон */
+.monster-hit-anim {
+  animation: monsterDamaged 0.2s ease-in-out !important;
+}
+@keyframes monsterDamaged {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(0.85) rotate(-10deg); filter: brightness(3) sepia(1) hue-rotate(-50deg) saturate(5); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* DAMAGE TAKEN SCREEN FLASH */
+#damage-flash {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(255, 0, 0, 0.4); pointer-events: none; opacity: 0;
+  transition: opacity 0.1s ease; z-index: 999;
+}
+#damage-flash.active { opacity: 1; }
+
 .damage-popup {
-  position: absolute; font-size: 28px; font-weight: 900; color: #ff2200;
-  text-shadow: 2px 2px #000; pointer-events: none; animation: popup 0.7s forwards;
+  position: absolute; font-size: 28px; font-weight: 900; color: #ff0000;
+  text-shadow: 2px 2px 0 #000; pointer-events: none; animation: popupAnim 0.7s forwards;
 }
-@keyframes popup { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-40px); } }
+@keyframes popupAnim {
+  0% { opacity: 1; transform: translateY(0) scale(0.5); }
+  50% { opacity: 1; transform: translateY(-30px) scale(1.3); }
+  100% { opacity: 0; transform: translateY(-60px) scale(1); }
+}
 
-/* УВЕЛИЧЕННАЯ КАМЕРА С CANVAS OVERLAY */
-.camera-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
-#canvas { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-
-/* Выбор упражнения */
+/* EXERCISE SELECTOR */
 .exercise-selector { display: flex; gap: 6px; margin: 8px 0; }
-.btn-ex { flex: 1; padding: 10px; background: #1a1a22; border: 1px solid #444; color: #aaa; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 11px; }
-.btn-ex.active { background: #ff2200; color: #fff; border-color: #ff5533; box-shadow: 0 0 10px rgba(255,34,0,0.5); }
+.btn-ex {
+  flex: 1; padding: 10px; background: #111; border: 1px solid #444; color: #888;
+  font-family: monospace; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 11px;
+}
+.btn-ex.active { background: #330000; color: #ff0000; border-color: #ff0000; box-shadow: 0 0 8px #ff0000; }
 
-.stats-panel { display: flex; justify-content: space-around; background: #111116; padding: 8px; border-radius: 6px; font-size: 12px; }
+/* EXPANDED CAMERA VIEWPORT & ANGLE HUD */
+.camera-wrapper {
+  position: relative; width: 100%; border: 2px solid #00ff00; border-radius: 6px;
+  overflow: hidden; background: #000; height: 260px;
+}
+#canvas { width: 100%; height: 100%; transform: scaleX(-1); object-fit: cover; }
 
-/* Навигация */
-.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 50px; background: #0a0a0d; border-top: 1px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 100; }
-.nav-btn { background: none; border: none; color: #666; font-size: 12px; font-weight: bold; }
-.nav-btn.active { color: #ff2200; }
+.angle-hud-box {
+  position: absolute; bottom: 8px; right: 8px; background: rgba(0, 0, 0, 0.85);
+  border: 1px solid #00ff00; padding: 6px 10px; border-radius: 4px; width: 140px; text-align: center;
+}
+.angle-title { font-size: 9px; color: #aaa; }
+.angle-value-display { font-size: 20px; font-weight: bold; color: #00ff00; text-shadow: 0 0 5px #00ff00; }
+.angle-meter-bar {
+  position: relative; width: 100%; height: 10px; background: #222;
+  border: 1px solid #555; border-radius: 5px; margin: 4px 0; overflow: hidden;
+}
+.angle-meter-fill { height: 100%; width: 0%; background: #00ff00; transition: width 0.1s linear, background-color 0.2s; }
+.angle-target-line {
+  position: absolute; top: 0; bottom: 0; width: 2px; background: #ff0000; left: 50%; z-index: 2;
+}
+.angle-target-label { font-size: 9px; color: #ff0000; font-weight: bold; }
 
-.form-group { margin-bottom: 12px; }
-select { width: 100%; padding: 10px; background: #111; border: 1px solid #333; color: #fff; border-radius: 6px; }
-.doom-btn { width: 100%; padding: 12px; background: #ff2200; border: none; color: #fff; font-weight: bold; border-radius: 6px; }
+.stats-panel {
+  display: flex; justify-content: space-between; background: #111; border: 1px solid #333;
+  padding: 8px; border-radius: 4px; margin-top: 6px; font-size: 11px; color: #fff;
+}
+
+/* NAVIGATION */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 50px; background: #000;
+  border-top: 2px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 100;
+}
+.nav-btn { background: none; border: none; color: #666; font-family: monospace; font-size: 12px; font-weight: bold; cursor: pointer; }
+.nav-btn.active { color: #00ff00; text-shadow: 0 0 5px #00ff00; }
+
+.shop-list { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.shop-item { display: flex; justify-content: space-between; align-items: center; background: #111; padding: 8px; border: 1px solid #333; border-radius: 4px; }
+.shop-item.equipped { border-color: #00ff00; background: #002200; }
+.gold-text { color: #ffcc00; }
