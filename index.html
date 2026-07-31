@@ -10,43 +10,46 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="dark-fantasy-theme">
-
-  <!-- Фоновые эффекты тумана и искр -->
-  <div class="ambient-mist"></div>
-  <div class="ambient-sparks"></div>
+<body class="neon-fantasy-theme">
 
   <div id="damage-flash"></div>
   <div id="event-banner" class="banner-overlay"></div>
   <div id="toast-container"></div>
 
-  <!-- ОНБОРДИНГ / ПРИВЕТСТВЕННОЕ МЕНЮ -->
-  <div id="screen-onboarding" class="screen active">
-    <div class="fantasy-card epic-entrance">
-      <div class="card-embers"></div>
+  <!-- ВЕРХНИЙ СТАТУС БАР (Как в референсе) -->
+  <div class="top-status-bar">
+    <div class="status-pill"><span style="color:#888;">РАНГ</span> <span id="top-rank" style="color:var(--neon-cyan);">E</span></div>
+    <div class="status-pill pulse-border"><span style="color:var(--blood);">🔥</span> <span id="top-streak">0 дн.</span></div>
+    <div class="status-pill"><span style="color:#888;">УР.</span> <span id="top-level" style="color:var(--gold);">1</span></div>
+  </div>
+
+  <!-- ОНБОРДИНГ -->
+  <div id="screen-onboarding" class="screen active" style="padding-top: 60px;">
+    <div class="modern-card epic-entrance">
       <div class="card-content">
-        <h1 class="gothic-title glow-text">⚔️ БЕЗДНА: КЛИНОК И ПЛОТЬ ⚔️</h1>
-        <p class="gothic-subtitle">10 ГЛАВ · 50 ИСПЫТАНИЙ · БЕСКОНЕЧНЫЙ ПУТЬ</p>
+        <h1 class="modern-title glow-text-cyan">YOU vs ABYSS</h1>
+        <p class="modern-subtitle">10 ГЛАВ · 50 ИСПЫТАНИЙ</p>
 
         <form id="health-form">
           <div class="form-group">
-            <label>Уровень подготовки (Ранг):</label>
-            <select id="fitness-level" class="fantasy-select">
-              <option value="beginner">Оруженосец (Новичок)</option>
-              <option value="medium" selected>Рыцарь Тьмы (Средний)</option>
-              <option value="pro">Лорд Бездны (Продвинутый)</option>
+            <label>Уровень подготовки:</label>
+            <select id="fitness-level" class="modern-select">
+              <option value="beginner">Новичок</option>
+              <option value="medium" selected>Средний</option>
+              <option value="pro">Продвинутый</option>
             </select>
           </div>
-
-          <button type="submit" class="fantasy-btn glow-btn pulse-anim">ВОЙТИ В БЕЗДНУ 💀</button>
+          <button type="submit" class="modern-btn btn-primary pulse-anim">НАЧАТЬ ПУТЬ</button>
         </form>
 
         <div id="continue-panel" class="continue-panel" style="display:none;">
           <p class="continue-info" id="continue-info"></p>
-          <button type="button" id="btn-continue" class="fantasy-btn glow-btn pulse-anim">⚔️ ПРОДОЛЖИТЬ ПУТЬ</button>
-          <button type="button" id="btn-restart-link" class="link-btn danger-link">Начать заново</button>
+          <button type="button" id="btn-continue" class="modern-btn btn-primary pulse-anim">ПРОДОЛЖИТЬ</button>
+          <button type="button" id="btn-restart-link" class="link-btn danger-link">Сбросить прогресс</button>
         </div>
       </div>
     </div>
@@ -54,148 +57,154 @@
 
   <!-- ИГРОВАЯ АРЕНА -->
   <div id="screen-game" class="screen">
+    
+    <!-- ВКЛАДКА БОЯ -->
     <div id="tab-arena" class="tab-content active">
 
-      <div class="arena-toolbar">
-        <span class="chapter-mini" id="chapter-mini">ГЛАВА I</span>
-        <button id="btn-retreat" class="btn-retreat" onclick="retreatToCamp()">🏃 ОТСТУПИТЬ</button>
-      </div>
-
-      <div id="arena-bg" class="arena-viewport chapter-1">
-        <div class="chapter-badge" id="chapter-title">ГЛАВА I: ШЕПЧУЩИЙ ЛЕС</div>
-
-        <div class="monster-viewport">
-          <div class="icon-frame monster-frame">
-            <div id="monster-sprite" class="huge-icon floating-anim">🧟</div>
-          </div>
-          <div id="damage-popup-container"></div>
-        </div>
-      </div>
-
-      <!-- ХП Врага расположено сразу под его окном -->
-      <div class="hud-card enemy-hud" style="margin: 8px 0; border: 1px solid var(--blood); box-shadow: inset 0 0 10px rgba(145,0,0,0.5);">
-        <div class="hud-title glow-text" id="monster-name" style="font-size: 13px;">ТВАРЬ БЕЗДНЫ</div>
-        <div class="bar-outer" style="height: 20px;">
-          <div id="monster-hp-fill" class="bar-inner enemy-hp" style="width: 100%;"></div>
-          <span id="monster-hp-text" style="line-height: 20px; font-size: 12px;">50 / 50 HP</span>
-        </div>
-      </div>
-
-      <!-- Выбор упражнений -->
-      <div class="exercise-selector">
-        <button id="btn-pushup" class="btn-ex active" onclick="switchExercise('pushup')">
-          ⚔️ УДАР (<span id="dmg-pushup-val">10</span> DMG)
-          <div class="ex-sub">ОТЖИМАНИЯ</div>
-        </button>
-        <button id="btn-squat" class="btn-ex" onclick="switchExercise('squat')">
-          🛡️ ЩИТ (<span id="dmg-squat-val">10</span> DMG)
-          <div class="ex-sub">ПРИСЕДАНИЯ</div>
-        </button>
-      </div>
-
+      <!-- Камера на фоне -->
       <div class="camera-wrapper">
         <video id="webcam" autoplay muted playsinline style="display:none;"></video>
         <canvas id="canvas"></canvas>
+        <div class="camera-overlay-gradient"></div>
 
-        <!-- ВАШИ ХП (Теперь внутри камеры слева внизу) -->
-        <div class="player-hp-camera-overlay">
-          <div class="hud-title glow-text" style="text-align: left; margin-bottom: 4px; font-size: 11px;">🗡️ ВАШЕ ЗДОРОВЬЕ</div>
-          <div class="bar-outer" style="height: 16px;">
-            <div id="player-hp-fill" class="bar-inner player-hp" style="width: 100%;"></div>
-            <span id="player-hp-text" style="line-height: 16px; font-size: 11px;">100 / 100 HP</span>
+        <!-- Интерфейс поверх камеры -->
+        <div class="combat-ui">
+          
+          <!-- Враг сверху (Круглая аватарка как в референсе) -->
+          <div class="enemy-section">
+            <div class="enemy-avatar-wrapper">
+              <div class="enemy-avatar" id="monster-sprite">🧟</div>
+            </div>
+            <div class="enemy-info">
+              <div class="chapter-badge" id="chapter-title">ВРАТА E · ШЕПЧУЩИЙ ЛЕС</div>
+              <div class="enemy-name" id="monster-name">Гоблин · 1/50</div>
+              <div class="modern-bar-outer enemy-bar">
+                <div id="monster-hp-fill" class="modern-bar-inner bg-purple" style="width: 100%;"></div>
+                <span id="monster-hp-text">50 / 50 HP</span>
+              </div>
+            </div>
+            <div id="damage-popup-container"></div>
           </div>
-        </div>
 
-        <div class="angle-hud-overlay">
-          <div class="angle-label">УГОЛ СУСТАВА</div>
-          <div class="angle-num"><span id="live-angle-val">0</span>°</div>
-          <div class="angle-progress-bar">
-            <div id="angle-meter-fill" class="angle-meter-fill"></div>
-            <div class="angle-target-marker" id="angle-target-marker"></div>
+          <!-- Центральный статус -->
+          <div class="center-status" id="pose-status">Ищу тебя в кадре...</div>
+
+          <!-- Нижняя панель боя (Огромный счетчик) -->
+          <div class="combat-footer">
+            <div class="side-controls">
+              <button class="combat-action-btn" onclick="retreatToCamp()">
+                <div class="icon">🚪</div>
+                <span>Отступить</span>
+              </button>
+            </div>
+            
+            <div class="huge-counter-wrapper">
+              <div class="huge-counter" id="rep-count-big">0</div>
+            </div>
+
+            <div class="side-controls">
+              <!-- Кнопка переключения упражнения -->
+              <button class="combat-action-btn" id="btn-switch-ex" onclick="toggleExercise()">
+                <div class="icon" id="ex-icon">⚔️</div>
+                <span id="ex-name">Отжимания</span>
+              </button>
+            </div>
           </div>
-          <div class="floor-dist-label" style="display:none;">ПОЛ: <span id="floor-dist-val">100</span>%</div>
-        </div>
-      </div>
 
-      <div class="stats-panel">
-        <div>ПОВТОРЫ: <strong id="rep-count" style="color:var(--gold-bright);">0 / 0</strong></div>
-        <div>СТАТУС: <strong id="pose-status" style="color:var(--emerald);">ИНИЦИАЛИЗАЦИЯ...</strong></div>
+          <!-- Полоска здоровья игрока в самом низу -->
+          <div class="player-hp-section">
+            <div class="modern-bar-outer player-bar">
+              <div id="player-hp-fill" class="modern-bar-inner bg-cyan" style="width: 100%;"></div>
+              <span id="player-hp-text">100 / 100 HP</span>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
 
-    <!-- ЛАГЕРЬ -->
-    <div id="tab-camp" class="tab-content">
-      <div class="camp-panel">
-        <div class="camp-fire">🔥</div>
-        <h2 class="section-title">БЕЗОПАСНЫЙ ЛАГЕРЬ</h2>
-        <p class="camp-flavor">Пламя костра согревает тело. Здоровье восстанавливается автоматически.</p>
+    <!-- ВРАТА (ЛАГЕРЬ) -->
+    <div id="tab-camp" class="tab-content" style="padding-top: 60px;">
+      <h2 class="section-title">ВРАТА СИЛЫ</h2>
+      <p class="section-desc">Здесь безопасно. Здоровье восстанавливается само.</p>
 
-        <div class="hud-card player-hud camp-hp-card" id="camp-hp-card" style="width: 100%;">
-          <div class="hud-title glow-text">❤️ ВАШЕ ЗДОРОВЬЕ</div>
-          <div class="bar-outer" style="height: 22px;">
-            <div id="camp-hp-fill" class="bar-inner player-hp" style="width:100%;"></div>
-            <span id="camp-hp-text" style="font-size: 13px; line-height: 20px;">100 / 100 HP</span>
-          </div>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-value text-cyan" id="camp-hp-val">100</div>
+          <div class="stat-label">ЗДОРОВЬЕ</div>
         </div>
-
-        <div class="camp-stats-grid" style="width: 100%;">
-          <div class="camp-stat"><span class="camp-stat-label">Глава</span><span id="camp-chapter" class="camp-stat-val">I / X</span></div>
-          <div class="camp-stat"><span class="camp-stat-label">Уровень</span><span id="camp-level" class="camp-stat-val">1 / 50</span></div>
-          <div class="camp-stat"><span class="camp-stat-label">Золото</span><span id="camp-gold" class="camp-stat-val">0 💎</span></div>
-          <div class="camp-stat"><span class="camp-stat-label">Повторы</span><span id="camp-reps" class="camp-stat-val">0</span></div>
+        <div class="stat-box">
+          <div class="stat-value text-gold" id="camp-gold">0</div>
+          <div class="stat-label">РУДА</div>
         </div>
-
-        <button id="btn-return-battle" class="fantasy-btn glow-btn pulse-anim" onclick="showTab('arena')">⚔️ ВЕРНУТЬСЯ В БОЙ</button>
-        
-        <div id="camp-victory-panel" class="camp-victory-panel" style="display:none; width: 100%;">
-          <button type="button" id="btn-new-game-plus" class="fantasy-btn glow-btn">🔄 НОВАЯ ИГРА+</button>
+        <div class="stat-box">
+          <div class="stat-value text-purple" id="camp-level">1</div>
+          <div class="stat-label">УРОВЕНЬ</div>
         </div>
-
-        <button type="button" id="btn-full-reset" class="fantasy-btn danger-btn" style="margin-top: 30px; width: 90%;">Сбросить весь прогресс</button>
+        <div class="stat-box">
+          <div class="stat-value text-white" id="camp-reps">0</div>
+          <div class="stat-label">ПОВТОРЕНИЯ</div>
+        </div>
       </div>
-    </div>
 
-    <!-- ТОРГОВЕЦ / ЛАВКА -->
-    <div id="tab-shop" class="tab-content">
-      <div class="shop-header">
-        <h2 class="section-title">🔮 ЛАВКА БЕССМЕРТНЫХ</h2>
-        <p class="gold-balance">ВАШЕ ЗОЛОТО: <strong id="shop-gold" class="gold-text glow-text">0 💎</strong></p>
+      <div class="modern-card mt-20">
+        <button id="btn-return-battle" class="modern-btn btn-primary w-100 pulse-anim" onclick="showTab('arena')">ВЕРНУТЬСЯ В БОЙ</button>
       </div>
       
-      <h3 class="shop-category-title">🛡️ НАГРУДНИКИ (ПОВЫШАЮТ МАКС. HP)</h3>
-      <div id="armors-list" class="shop-list"></div>
-
-      <h3 class="shop-category-title">🗡️ ОРУЖИЕ (УРОН ОТ ОТЖИМАНИЙ)</h3>
-      <div id="weapons-list" class="shop-list"></div>
-
-      <h3 class="shop-category-title">🥾 ПОНОЖИ (УРОН ОТ ПРИСЕДАНИЙ)</h3>
-      <div id="boots-list" class="shop-list"></div>
+      <button type="button" id="btn-full-reset" class="modern-btn btn-danger w-100 mt-20">Сбросить аккаунт</button>
     </div>
 
-    <!-- ДОСТИЖЕНИЯ -->
-    <div id="tab-achievements" class="tab-content">
-      <h2 class="section-title">🏆 ТРОФЕИ И ВЕЛИЧИЕ</h2>
-      <p style="text-align:center; font-size:11px; color:#888; margin-bottom:10px;">(Нажмите на трофей, чтобы узнать как его получить)</p>
+    <!-- ОХОТНИК (ЛАВКА) -->
+    <div id="tab-shop" class="tab-content" style="padding-top: 60px;">
+      <h2 class="section-title">АРСЕНАЛ ОХОТНИКА</h2>
+      <p class="section-desc">Доступно руды: <strong id="shop-gold" class="text-gold">0</strong></p>
+      
+      <div class="shop-nav">
+        <button class="shop-nav-btn active" onclick="switchShopTab('armors')">Броня</button>
+        <button class="shop-nav-btn" onclick="switchShopTab('weapons')">Удары</button>
+        <button class="shop-nav-btn" onclick="switchShopTab('boots')">Стойка</button>
+      </div>
+
+      <div id="shop-container-armors" class="shop-container active">
+        <h3 class="category-title text-cyan">Максимальное здоровье</h3>
+        <div id="armors-list" class="shop-list"></div>
+      </div>
+
+      <div id="shop-container-weapons" class="shop-container">
+        <h3 class="category-title text-purple">Урон от отжиманий</h3>
+        <div id="weapons-list" class="shop-list"></div>
+      </div>
+
+      <div id="shop-container-boots" class="shop-container">
+        <h3 class="category-title text-gold">Урон от приседаний</h3>
+        <div id="boots-list" class="shop-list"></div>
+      </div>
+    </div>
+
+    <!-- РЕЙТИНГ (ТРОФЕИ) -->
+    <div id="tab-achievements" class="tab-content" style="padding-top: 60px;">
+      <h2 class="section-title">ВАШИ ТИТУЛЫ</h2>
+      <p class="section-desc">Нажмите на карточку для деталей</p>
       <div id="achievements-list" class="achievements-grid"></div>
     </div>
 
-    <!-- КРУПНОЕ НИЖНЕЕ МЕНЮ С ПОДСВЕТКОЙ -->
-    <div class="bottom-nav">
-      <button onclick="showTab('arena')" id="nav-arena" class="nav-btn active">
-        <span class="nav-icon">⚔️</span>
-        <span class="nav-text">БОЙ</span>
+    <!-- НИЖНЕЕ МЕНЮ (Modern) -->
+    <div class="modern-bottom-nav">
+      <button onclick="showTab('camp')" id="nav-camp" class="nav-item">
+        <div class="nav-icon">🔮</div>
+        <div class="nav-text">Врата</div>
       </button>
-      <button onclick="showTab('camp')" id="nav-camp" class="nav-btn">
-        <span class="nav-icon">🏕️</span>
-        <span class="nav-text">ЛАГЕРЬ</span>
+      <button onclick="showTab('arena')" id="nav-arena" class="nav-item active">
+        <div class="nav-icon">⚔️</div>
+        <div class="nav-text">Бой</div>
       </button>
-      <button onclick="showTab('shop')" id="nav-shop" class="nav-btn">
-        <span class="nav-icon">🛒</span>
-        <span class="nav-text">ЛАВКА</span>
+      <button onclick="showTab('achievements')" id="nav-achievements" class="nav-item">
+        <div class="nav-icon">🏆</div>
+        <div class="nav-text">Титулы</div>
       </button>
-      <button onclick="showTab('achievements')" id="nav-achievements" class="nav-btn">
-        <span class="nav-icon">🏆</span>
-        <span class="nav-text">ТРОФЕИ</span>
+      <button onclick="showTab('shop')" id="nav-shop" class="nav-item">
+        <div class="nav-icon">🗡️</div>
+        <div class="nav-text">Охотник</div>
       </button>
     </div>
 
