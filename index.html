@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Без названия</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -14,44 +14,38 @@
 </head>
 <body class="dark-fantasy-theme">
 
+  <!-- Фоновые эффекты тумана и искр -->
+  <div class="ambient-mist"></div>
+  <div class="ambient-sparks"></div>
+
   <div id="damage-flash"></div>
   <div id="event-banner" class="banner-overlay"></div>
   <div id="toast-container"></div>
 
-  <!-- ОНБОРДИНГ -->
+  <!-- ОНБОРДИНГ / ПРИВЕТСТВЕННОЕ МЕНЮ -->
   <div id="screen-onboarding" class="screen active">
-    <div class="fantasy-card">
+    <div class="fantasy-card epic-entrance">
       <div class="card-embers"></div>
       <div class="card-content">
-        <h1 class="gothic-title">⚔️ БЕЗДНА: КЛИНОК И ПЛОТЬ ⚔️</h1>
-        <p class="gothic-subtitle">10 ГЛАВ · 50 ИСПЫТАНИЙ · ТВОЁ ТЕЛО — ТВОЁ ОРУЖИЕ</p>
+        <h1 class="gothic-title glow-text">⚔️ БЕЗДНА: КЛИНОК И ПЛОТЬ ⚔️</h1>
+        <p class="gothic-subtitle">10 ГЛАВ · 50 ИСПЫТАНИЙ · БЕСКОНЕЧНЫЙ ПУТЬ</p>
 
         <form id="health-form">
           <div class="form-group">
-            <label>Ранг воина (Уровень подготовки):</label>
-            <select id="fitness-level">
+            <label>Уровень подготовки (Ранг):</label>
+            <select id="fitness-level" class="fantasy-select">
               <option value="beginner">Оруженосец (Новичок)</option>
               <option value="medium" selected>Рыцарь Тьмы (Средний)</option>
               <option value="pro">Лорд Бездны (Продвинутый)</option>
             </select>
           </div>
 
-          <div class="form-group">
-            <label>Ограничения по здоровью:</label>
-            <select id="health-issues">
-              <option value="none">Готов к бою (Без ограничений)</option>
-              <option value="knees">Травмы коленей</option>
-              <option value="wrists">Боль в суставах кистей</option>
-              <option value="back">Проблемы со спиной</option>
-            </select>
-          </div>
-
-          <button type="submit" class="fantasy-btn glow-btn">ВОЙТИ В БЕЗДНУ 💀</button>
+          <button type="submit" class="fantasy-btn glow-btn pulse-anim">ВОЙТИ В БЕЗДНУ 💀</button>
         </form>
 
         <div id="continue-panel" class="continue-panel" style="display:none;">
           <p class="continue-info" id="continue-info"></p>
-          <button type="button" id="btn-continue" class="fantasy-btn glow-btn">⚔️ ПРОДОЛЖИТЬ ПУТЬ</button>
+          <button type="button" id="btn-continue" class="fantasy-btn glow-btn pulse-anim">⚔️ ПРОДОЛЖИТЬ ПУТЬ</button>
           <button type="button" id="btn-restart-link" class="link-btn danger-link">Начать заново</button>
         </div>
       </div>
@@ -82,7 +76,7 @@
 
       <div class="arena-toolbar">
         <span class="chapter-mini" id="chapter-mini">ГЛАВА I</span>
-        <button id="btn-retreat" class="btn-retreat" onclick="retreatToCamp()">🏃 ОТСТУПИТЬ В ЛАГЕРЬ</button>
+        <button id="btn-retreat" class="btn-retreat" onclick="retreatToCamp()">🏃 ОТСТУПИТЬ</button>
       </div>
 
       <div id="arena-bg" class="arena-viewport chapter-1">
@@ -90,7 +84,7 @@
 
         <div class="monster-viewport">
           <div class="icon-frame monster-frame">
-            <div id="monster-sprite" class="huge-icon">🧟</div>
+            <div id="monster-sprite" class="huge-icon floating-anim">🧟</div>
           </div>
           <div id="damage-popup-container"></div>
         </div>
@@ -98,10 +92,12 @@
 
       <div class="exercise-selector">
         <button id="btn-pushup" class="btn-ex active" onclick="switchExercise('pushup')">
-          ⚔️ ОТЖИМАНИЯ (<span id="dmg-pushup-val">10</span> DMG)
+          ⚔️ УДАР (<span id="dmg-pushup-val">10</span> DMG)
+          <div class="ex-sub">ОТЖИМАНИЯ</div>
         </button>
         <button id="btn-squat" class="btn-ex" onclick="switchExercise('squat')">
-          🛡️ ПРИСЕДАНИЯ (<span id="dmg-squat-val">10</span> DMG)
+          🛡️ ЩИТ (<span id="dmg-squat-val">10</span> DMG)
+          <div class="ex-sub">ПРИСЕДАНИЯ</div>
         </button>
       </div>
 
@@ -116,13 +112,13 @@
             <div id="angle-meter-fill" class="angle-meter-fill"></div>
             <div class="angle-target-marker" id="angle-target-marker"></div>
           </div>
-          <div class="floor-dist-label">ПОЛ: <span id="floor-dist-val">100</span>%</div>
+          <div class="floor-dist-label" style="display:none;">ПОЛ: <span id="floor-dist-val">100</span>%</div>
         </div>
       </div>
 
       <div class="stats-panel">
-        <div>ПОВТОРЫ: <strong id="rep-count">💪 0 | 🦵 0</strong></div>
-        <div>СТАТУС: <strong id="pose-status">ИНИЦИАЛИЗАЦИЯ...</strong></div>
+        <div>ПОВТОРЫ: <strong id="rep-count" style="color:var(--gold-bright);">0 / 0</strong></div>
+        <div>СТАТУС: <strong id="pose-status" style="color:var(--emerald);">ИНИЦИАЛИЗАЦИЯ...</strong></div>
       </div>
     </div>
 
@@ -130,14 +126,14 @@
     <div id="tab-camp" class="tab-content">
       <div class="camp-panel">
         <div class="camp-fire">🔥</div>
-        <h2 class="section-title">ЛАГЕРЬ У ВХОДА</h2>
-        <p class="camp-flavor">Пока вы отдыхаете у костра, здоровье восстанавливается само.</p>
+        <h2 class="section-title">БЕЗОПАСНЫЙ ЛАГЕРЬ</h2>
+        <p class="camp-flavor">Пламя костра согревает тело. Здоровье восстанавливается автоматически.</p>
 
         <div class="hud-card player-hud camp-hp-card" id="camp-hp-card">
-          <div class="hud-title">🗡️ ЗДОРОВЬЕ РЫЦАРЯ</div>
-          <div class="bar-outer">
+          <div class="hud-title">❤️ ВАШЕ ЗДОРОВЬЕ</div>
+          <div class="bar-outer" style="height: 22px;">
             <div id="camp-hp-fill" class="bar-inner player-hp" style="width:100%;"></div>
-            <span id="camp-hp-text">100 / 100 HP</span>
+            <span id="camp-hp-text" style="font-size: 13px; line-height: 20px;">100 / 100 HP</span>
           </div>
         </div>
 
@@ -148,45 +144,57 @@
           <div class="camp-stat"><span class="camp-stat-label">Повторы</span><span id="camp-reps" class="camp-stat-val">0</span></div>
         </div>
 
-        <button id="btn-return-battle" class="fantasy-btn glow-btn" onclick="showTab('arena')">⚔️ ВЕРНУТЬСЯ В БОЙ</button>
+        <button id="btn-return-battle" class="fantasy-btn glow-btn pulse-anim" onclick="showTab('arena')">⚔️ ВЕРНУТЬСЯ В БОЙ</button>
         
         <div id="camp-victory-panel" class="camp-victory-panel" style="display:none;">
-          <p>🔱 Бездна покорена! Начните Новую Игру+ и пройдите всех врагов заново на новом витке легенды — снаряжение и трофеи сохранятся.</p>
-          <button type="button" id="btn-new-game-plus" class="fantasy-btn">🔄 НОВАЯ ИГРА+</button>
+          <button type="button" id="btn-new-game-plus" class="fantasy-btn glow-btn">🔄 НОВАЯ ИГРА+</button>
         </div>
 
-        <button type="button" id="btn-full-reset" class="link-btn danger-link">Полный сброс прогресса</button>
+        <button type="button" id="btn-full-reset" class="fantasy-btn danger-btn" style="margin-top: 30px;">Сбросить весь прогресс</button>
       </div>
     </div>
 
     <!-- ТОРГОВЕЦ / ЛАВКА -->
     <div id="tab-shop" class="tab-content">
-      <h2 class="section-title">🔮 ЛАВКА БЕССМЕРТНЫХ</h2>
-      <p class="gold-balance">РУДЫ И ЗОЛОТО: <strong id="shop-gold" class="gold-text">0 💎</strong></p>
+      <div class="shop-header">
+        <h2 class="section-title">🔮 ЛАВКА БЕССМЕРТНЫХ</h2>
+        <p class="gold-balance">ВАШЕ ЗОЛОТО: <strong id="shop-gold" class="gold-text glow-text">0 💎</strong></p>
+      </div>
       
-      <!-- Секция Монетизации -->
-      <h3 style="margin-top: 15px; color: #ffdf73; text-shadow: 0 0 10px #ffdf73;">✨ АРТЕФАКТЫ БОГОВ (2 ⭐️ КАЖДЫЙ) ✨</h3>
-      <p style="font-size: 10px; color: #888; text-align: center; margin-bottom: 10px;">Эти артефакты даруют невероятную силу. Оплата через Telegram Stars.</p>
-      <div id="premium-list" class="shop-list premium-grid"></div>
+      <h3 class="shop-category-title">🛡️ НАГРУДНИКИ (ПОВЫШАЮТ МАКС. HP)</h3>
+      <div id="armors-list" class="shop-list"></div>
 
-      <h3 style="margin-top: 25px;">🗡️ ОРУЖИЕ (УРОН ОТЖИМАНИЙ)</h3>
+      <h3 class="shop-category-title">🗡️ ОРУЖИЕ (УРОН ОТ ОТЖИМАНИЙ)</h3>
       <div id="weapons-list" class="shop-list"></div>
 
-      <h3 style="margin-top: 15px;">🛡️ ДОСПЕХИ (УРОН ПРИСЕДАНИЙ)</h3>
+      <h3 class="shop-category-title">🥾 ПОНОЖИ (УРОН ОТ ПРИСЕДАНИЙ)</h3>
       <div id="boots-list" class="shop-list"></div>
     </div>
 
     <!-- ДОСТИЖЕНИЯ -->
     <div id="tab-achievements" class="tab-content">
-      <h2 class="section-title">🏆 ТРОФЕИ</h2>
+      <h2 class="section-title">🏆 ТРОФЕИ И ВЕЛИЧИЕ</h2>
       <div id="achievements-list" class="achievements-grid"></div>
     </div>
 
+    <!-- КРУПНОЕ НИЖНЕЕ МЕНЮ -->
     <div class="bottom-nav">
-      <button onclick="showTab('arena')" id="nav-arena" class="nav-btn active">⚔️ БОЙ</button>
-      <button onclick="showTab('camp')" id="nav-camp" class="nav-btn">🏕️ ЛАГЕРЬ</button>
-      <button onclick="showTab('shop')" id="nav-shop" class="nav-btn">🛒 ЛАВКА</button>
-      <button onclick="showTab('achievements')" id="nav-achievements" class="nav-btn">🏆 ТРОФЕИ</button>
+      <button onclick="showTab('arena')" id="nav-arena" class="nav-btn active">
+        <span class="nav-icon">⚔️</span>
+        <span class="nav-text">БОЙ</span>
+      </button>
+      <button onclick="showTab('camp')" id="nav-camp" class="nav-btn">
+        <span class="nav-icon">🏕️</span>
+        <span class="nav-text">ЛАГЕРЬ</span>
+      </button>
+      <button onclick="showTab('shop')" id="nav-shop" class="nav-btn">
+        <span class="nav-icon">🛒</span>
+        <span class="nav-text">ЛАВКА</span>
+      </button>
+      <button onclick="showTab('achievements')" id="nav-achievements" class="nav-btn">
+        <span class="nav-icon">🏆</span>
+        <span class="nav-text">ТРОФЕИ</span>
+      </button>
     </div>
 
   </div>
