@@ -144,13 +144,10 @@ label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 
 }
 
 .danger-btn {
-  background: linear-gradient(180deg, #400, #100); border-color: #800; color: #a55; margin-top: 15px; font-size: 13px;
+  background: linear-gradient(180deg, #400, #100); border-color: #800; color: #a55; font-size: 13px;
 }
 
-/* БОЛЬШИЕ БАРЫ ЗДОРОВЬЯ СНИЗУ */
-.fantasy-hud-bottom { 
-  display: flex; flex-direction: column; gap: 12px; margin: 15px 0; 
-}
+/* БАРЫ ЗДОРОВЬЯ */
 .hud-card { padding: 12px; border: 2px solid var(--border-wine); }
 .hud-title { font-size: 15px; color: var(--gold-bright); margin-bottom: 8px; letter-spacing: 1px; text-align: center; }
 
@@ -232,12 +229,28 @@ label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 
   box-shadow: 0 0 25px rgba(212,175,55,0.25);
 }
 #canvas { width: 100%; height: 100%; transform: scaleX(-1); object-fit: cover; }
-.angle-hud-overlay { position: absolute; bottom: 10px; right: 10px; background: rgba(0, 0, 0, 0.85); border: 1px solid var(--gold); padding: 8px 12px; border-radius: 8px; width: 160px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.9); }
+
+/* ЗДОРОВЬЕ ВНУТРИ КАМЕРЫ (СЛЕВА ВНИЗУ) */
+.player-hp-camera-overlay {
+  position: absolute; bottom: 10px; left: 10px;
+  width: calc(100% - 180px); /* Не перекрывает правый угол */
+  background: rgba(0, 0, 0, 0.8); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-wine); z-index: 10;
+}
+
+.angle-hud-overlay { position: absolute; bottom: 10px; right: 10px; background: rgba(0, 0, 0, 0.85); border: 1px solid var(--gold); padding: 8px 12px; border-radius: 8px; width: 150px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.9); }
 .angle-num { font-size: 26px; font-weight: 900; color: var(--gold-bright); text-shadow: 0 0 10px var(--gold); }
 .angle-progress-bar { position: relative; width: 100%; height: 12px; background: #222; border: 1px solid #555; border-radius: 6px; margin: 6px 0; overflow: hidden; }
 .angle-meter-fill { height: 100%; width: 0%; background: var(--emerald); transition: width 0.1s linear; }
 
 .stats-panel { display: flex; justify-content: space-between; padding: 14px; margin-top: 10px; font-size: 13px; color: #fff; }
+
+/* ИСПРАВЛЕНИЕ ЛАГЕРЯ */
+.camp-panel {
+  display: flex; flex-direction: column; align-items: center; text-align: center; padding: 20px 10px;
+}
+.camp-flavor {
+  font-size: 14px; color: #ddd; margin: 10px auto 25px auto; line-height: 1.5; text-align: center; max-width: 95%; text-shadow: 1px 1px 2px #000;
+}
 
 /* МАГАЗИН И ТРОФЕИ */
 .shop-header { text-align: center; margin-bottom: 20px; }
@@ -262,14 +275,15 @@ label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 
 
 /* ИСПРАВЛЕНИЕ ИКОНОК ТРОФЕЕВ (Чтобы не обрезались эмодзи) */
 .trophy-icon-frame {
-  width: 55px; height: 55px; font-size: 32px;
+  width: 55px; height: 55px; font-size: 30px;
   display: flex; align-items: center; justify-content: center;
   font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
-  overflow: hidden;
+  overflow: hidden; line-height: 1;
 }
 
 .achievements-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-.achieve-card { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px; }
+.achieve-card { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px; cursor: pointer; transition: 0.2s;}
+.achieve-card:active { transform: scale(0.95); }
 .achieve-card.unlocked { border-color: var(--gold-bright); background: rgba(212,175,55,0.1); }
 .achieve-card.claimed { border-color: var(--emerald); background: rgba(57,224,121,0.1); }
 .ach-progress { width: 100%; height: 6px; background: #111; border-radius: 3px; margin-top: 4px; border: 1px solid #333;}
