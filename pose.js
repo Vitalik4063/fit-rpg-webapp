@@ -8,6 +8,8 @@ const CONFIG = {
   squat:  { downAngle: 100 + DIFFICULTY_ADJUST, upAngle: 155, maxFloorDistPct: 50 + FLOOR_ADJUST }
 };
 
+let globalPose = null; // Глобальный инстанс сети
+
 function resetExerciseStage() { poseState.stage = "UP"; }
 
 function calculateAngle(A, B, C) {
@@ -17,7 +19,6 @@ function calculateAngle(A, B, C) {
   return Math.round(angle);
 }
 
-// Отрисовка скелета
 function drawBone(ctx, p1, p2, color = "#00e5ff", width = 4) {
   if (!p1 || !p2 || p1.visibility < 0.3 || p2.visibility < 0.3) return;
   ctx.beginPath();
@@ -37,23 +38,19 @@ function drawJointPoint(ctx, p, color = "#9d4edd", radius = 5) {
 }
 
 function drawFullSkeleton(ctx, lm, activeColor) {
-  // Торс
   drawBone(ctx, lm[11], lm[12], "#5a189a", 3);
   drawBone(ctx, lm[11], lm[23], "#5a189a", 3);
   drawBone(ctx, lm[12], lm[24], "#5a189a", 3);
   drawBone(ctx, lm[23], lm[24], "#5a189a", 3);
 
-  // Руки (выделяются при отжиманиях)
   const armColor = currentExercise === 'pushup' ? activeColor : "#5a189a";
   drawBone(ctx, lm[11], lm[13], armColor, 5); drawBone(ctx, lm[13], lm[15], armColor, 5);
   drawBone(ctx, lm[12], lm[14], armColor, 5); drawBone(ctx, lm[14], lm[16], armColor, 5);
 
-  // Ноги (выделяются при приседаниях)
   const legColor = currentExercise === 'squat' ? activeColor : "#5a189a";
   drawBone(ctx, lm[23], lm[25], legColor, 5); drawBone(ctx, lm[25], lm[27], legColor, 5);
   drawBone(ctx, lm[24], lm[26], legColor, 5); drawBone(ctx, lm[26], lm[28], legColor, 5);
 
-  // Суставы
   [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28].forEach(idx => drawJointPoint(ctx, lm[idx]));
 }
 
@@ -76,7 +73,6 @@ function processPose(landmarks, ctx) {
   document.getElementById('live-angle-val').innerText = currentAngle;
   document.getElementById('angle-meter-fill').style.width = `${Math.min(100, (currentAngle/180)*100)}%`;
 
-  // Подсветка скелета
   const activeColor = currentAngle <= cfg.downAngle ? "#00e5ff" : "#9d4edd";
   drawFullSkeleton(ctx, landmarks, activeColor);
 
@@ -85,6 +81,26 @@ function processPose(landmarks, ctx) {
     poseState.stage = "DOWN"; statusEl.innerText = "Вставай!"; statusEl.style.color = "#00e5ff";
     if (typeof onRepCompleted === 'function') onRepCompleted(currentExercise);
   }
+}
+
+// Функции управления камерой
+window.stopCamera = function() {
+  if (window.__activeCamera) {
+    window.__activeCamera.stop();
+    window.__activeCamera = null;
+  }
+  const videoElement = document.getElementById('webcam');
+  if (videoElement && videoElement.srcObject) {
+    videoElement.srcObject.getTracks().forEach(track => track.stop());
+    videoElement.srcObject = null;
+  }
+}
+
+window.restartCamera = function() {
+  const statusEl = document.getElementById('pose-status');
+  if(statusEl) { statusEl.innerText = "Запуск камеры..."; statusEl.style.color = "#00e5ff"; }
+  stopCamera();
+  setTimeout(initCamera, 400);
 }
 
 function initCamera() {
@@ -96,23 +112,33 @@ function initCamera() {
     console.error("MediaPipe не загружен"); return;
   }
   
-  const pose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
-  pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-  
-  pose.onResults((results) => {
-    canvasElement.width = videoElement.videoWidth || 640;
-    canvasElement.height = videoElement.videoHeight || 480;
-    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-    canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+  if (!globalPose) {
+    globalPose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
+    globalPose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
     
-    if (results.poseLandmarks && window.__arenaActive) {
-      processPose(results.poseLandmarks, canvasCtx);
-    }
-  });
+    globalPose.onResults((results) => {
+      canvasElement.width = videoElement.videoWidth || 640;
+      canvasElement.height = videoElement.videoHeight || 480;
+      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+      
+      if (results.poseLandmarks && window.__arenaActive) {
+        processPose(results.poseLandmarks, canvasCtx);
+      }
+    });
+  }
 
   window.__activeCamera = new Camera(videoElement, { 
-    onFrame: async () => { await pose.send({ image: videoElement }); }, 
+    onFrame: async () => { 
+      if (window.__arenaActive && videoElement.readyState >= 2) {
+        await globalPose.send({ image: videoElement }); 
+      }
+    }, 
     facingMode: 'user', width: 640, height: 480 
   });
-  window.__activeCamera.start();
+  
+  window.__activeCamera.start().catch(err => {
+    const statusEl = document.getElementById('pose-status');
+    if(statusEl) { statusEl.innerText = "Камера заблокирована"; statusEl.style.color = "#ff2a40"; }
+  });
 }
