@@ -3,9 +3,18 @@ let poseState = {
   exercise: "pushup"
 };
 
+// Сложность трекинга подстраивается под ранг воина, выбранный на онбординге:
+// новичкам — более мягкий угол опускания, продвинутым — требуется более глубокая амплитуда.
+const savedSettings = (() => {
+  try { return JSON.parse(localStorage.getItem('fit_dark_settings') || '{}'); }
+  catch (e) { return {}; }
+})();
+const DIFFICULTY_ADJUST = { beginner: 10, medium: 0, pro: -10 }[savedSettings.fitnessLevel] || 0;
+const FLOOR_ADJUST = savedSettings.fitnessLevel === 'beginner' ? 10 : 0;
+
 const CONFIG = {
-  pushup: { downAngle: 90, upAngle: 155, maxFloorDistPct: 40 },
-  squat:  { downAngle: 100, upAngle: 155, maxFloorDistPct: 50 }
+  pushup: { downAngle: 90 + DIFFICULTY_ADJUST, upAngle: 155, maxFloorDistPct: 40 + FLOOR_ADJUST },
+  squat:  { downAngle: 100 + DIFFICULTY_ADJUST, upAngle: 155, maxFloorDistPct: 50 + FLOOR_ADJUST }
 };
 
 function resetExerciseStage() {
@@ -158,6 +167,28 @@ function initCamera() {
   const videoElement = document.getElementById('webcam');
   const canvasElement = document.getElementById('canvas');
   const canvasCtx = canvasElement.getContext('2d');
+  const statusEl = document.getElementById('pose-status');
+
+  const setStatus = (text, color) => {
+    if (!statusEl) return;
+    statusEl.innerText = text;
+    statusEl.style.color = color;
+  };
+
+  // Проверка, что скрипты MediaPipe вообще успели загрузиться с CDN
+  // (в РФ jsdelivr.net иногда режется ТСПУ/DPI — тогда Pose/Camera будут undefined)
+  if (typeof Pose === 'undefined' || typeof Camera === 'undefined') {
+    setStatus("ОШИБКА ЗАГРУЗКИ MEDIAPIPE (CDN)", "#c93b3b");
+    console.error("MediaPipe Pose/Camera не определены — не загрузились скрипты с cdn.jsdelivr.net");
+    return;
+  }
+
+  // Проверка контекста безопасности — getUserMedia требует HTTPS (кроме localhost)
+  if (!window.isSecureContext) {
+    setStatus("ТРЕБУЕТСЯ HTTPS ДЛЯ КАМЕРЫ", "#c93b3b");
+    console.error("Страница открыта не по HTTPS — доступ к камере заблокирован браузером");
+    return;
+  }
 
   const pose = new Pose({
     locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
@@ -170,35 +201,70 @@ function initCamera() {
     minTrackingConfidence: 0.5
   });
 
-  pose.onResults((results) => {
-    canvasElement.width = videoElement.videoWidth || 640;
-    canvasElement.height = videoElement.videoHeight || 480;
-    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+  let canvasSized = false;
 
+  pose.onResults((results) => {
+    // Размер канваса выставляем один раз, когда реально известны размеры видео,
+    // а не на каждом кадре — постоянный resize сбрасывал состояние канваса и грузил CPU
+    if (!canvasSized && videoElement.videoWidth) {
+      canvasElement.width = videoElement.videoWidth;
+      canvasElement.height = videoElement.videoHeight;
+      canvasSized = true;
+    } else if (!canvasElement.width) {
+      canvasElement.width = 640;
+      canvasElement.height = 480;
+    }
+
+    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
-    if (results.poseLandmarks) {
+    // Обрабатываем повторы и рисуем скелет только когда открыта вкладка "Бой" —
+    // так в лагере/лавке/трофеях повторения не засчитываются в фоне и не тратится CPU.
+    if (results.poseLandmarks && window.__arenaActive) {
       processPose(results.poseLandmarks, canvasCtx);
     }
   });
 
-  // Запуск камеры с обработкой прямого доступа к устройству
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-      .then((stream) => {
-        videoElement.srcObject = stream;
-        videoElement.play();
-        
-        const camera = new Camera(videoElement, {
-          onFrame: async () => { await pose.send({ image: videoElement }); },
-          width: 640,
-          height: 480
-        });
-        camera.start();
-      })
-      .catch((err) => {
-        console.error("Ошибка камеры:", err);
-        document.getElementById('pose-status').innerText = "ОШИБКА ДОСТУПА К КАМЕРЕ";
-      });
-  }
+  setStatus("ЗАПРОС ДОСТУПА К КАМЕРЕ...", "#c9a050");
+
+  // ВАЖНО: единственная точка запроса медиапотока — через утилиту Camera из MediaPipe.
+  // Раньше здесь ДОПОЛНИТЕЛЬНО вручную вызывался navigator.mediaDevices.getUserMedia(),
+  // а затем ещё раз создавался Camera(...), который сам внутри себя тоже делает
+  // getUserMedia() и переустанавливает videoElement.srcObject. Два параллельных запроса
+  // потока — частая причина чёрного экрана/зависания камеры именно в WebView Telegram.
+  // Поэтому весь захват потока отдан ТОЛЬКО объекту Camera.
+  const camera = new Camera(videoElement, {
+    onFrame: async () => {
+      try {
+        await pose.send({ image: videoElement });
+      } catch (err) {
+        console.error("Ошибка обработки кадра pose:", err);
+      }
+    },
+    facingMode: 'user',
+    width: 640,
+    height: 480
+  });
+
+  camera.start()
+    .then(() => {
+      setStatus("ИНИЦИАЛИЗАЦИЯ...", "#c9a050");
+    })
+    .catch((err) => {
+      console.error("Ошибка запуска камеры:", err);
+      setStatus("ОШИБКА ДОСТУПА К КАМЕРЕ", "#c93b3b");
+      alert("Не удалось получить доступ к камере.\nПроверьте разрешения камеры в настройках Telegram / браузера и перезапустите приложение.");
+    });
+
+  // Останавливаем поток при закрытии/сворачивании WebApp, чтобы камера
+  // не оставалась захваченной и не мешала повторному запуску
+  window.addEventListener('beforeunload', () => {
+    try { camera.stop(); } catch (e) {}
+    const stream = videoElement.srcObject;
+    if (stream && stream.getTracks) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+  });
+
+  window.__activeCamera = camera;
 }
