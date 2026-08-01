@@ -11,6 +11,44 @@ const CONFIG = {
 let globalPose = null; 
 let isProcessing = false; // ПРЕДОХРАНИТЕЛЬ ОТ ЗАВИСАНИЯ И ПЕРЕГРУЗКИ
 
+// --- АНТИ-ФРИЗ СИСТЕМА ---
+// Раньше камера иногда "залипала" на первом кадре: если promise send() зависал
+// (что бывает у MediaPipe после reset()/остановки потока на середине кадра),
+// isProcessing навсегда оставался true и новые кадры больше не отправлялись.
+// Ниже — сторож, который лечит это сам, плюс защита от гонок при быстром
+// переключении вкладок / сворачивании приложения.
+let lastSendAttempt = 0;
+let lastResultReceived = 0;
+let watchdogInterval = null;
+let pendingRestartTimeout = null;
+let autoRecovering = false;
+
+function startWatchdog() {
+  stopWatchdog();
+  watchdogInterval = setInterval(() => {
+    if (!window.__arenaActive) return;
+    const now = Date.now();
+
+    // Кадр "залип" в обработке дольше 4с — принудительно снимаем блокировку
+    if (isProcessing && lastSendAttempt && (now - lastSendAttempt > 4000)) {
+      isProcessing = false;
+    }
+
+    // Больше 6с вообще нет ни одного результата от модели — тихо переподключаемся один раз
+    if (!autoRecovering && lastResultReceived && (now - lastResultReceived > 6000)) {
+      autoRecovering = true;
+      const statusEl = document.getElementById('pose-status');
+      if (statusEl) { statusEl.innerText = "Переподключение..."; statusEl.style.color = "#ffdf00"; }
+      window.restartCamera();
+      setTimeout(() => { autoRecovering = false; }, 4000);
+    }
+  }, 2000);
+}
+
+function stopWatchdog() {
+  if (watchdogInterval) { clearInterval(watchdogInterval); watchdogInterval = null; }
+}
+
 function resetExerciseStage() { poseState.stage = "UP"; }
 
 function calculateAngle(A, B, C) {
@@ -87,6 +125,9 @@ function processPose(landmarks, ctx) {
 
 // Глубокая остановка камеры и очистка памяти
 window.stopCamera = function() {
+  stopWatchdog();
+  if (pendingRestartTimeout) { clearTimeout(pendingRestartTimeout); pendingRestartTimeout = null; }
+
   if (window.__activeCamera) {
     try { window.__activeCamera.stop(); } catch(e) {}
     window.__activeCamera = null;
@@ -101,9 +142,11 @@ window.stopCamera = function() {
     videoElement.removeAttribute('src'); 
     videoElement.load(); // Жесткий сброс элемента
   }
-  if (globalPose) {
-    try { globalPose.reset(); } catch(e) {} // Сброс стейта ИИ
-  }
+  // ВАЖНО: раньше здесь вызывался globalPose.reset(). Если это происходило пока
+  // предыдущий кадр ещё обрабатывался (send() не успел вернуть результат),
+  // promise мог никогда не завершиться — isProcessing оставался true навсегда,
+  // и камера "замирала" на первом кадре. Модель прекрасно переживает остановку
+  // потока и без reset(), поэтому просто снимаем предохранитель руками.
   isProcessing = false;
 }
 
@@ -111,7 +154,11 @@ window.restartCamera = function() {
   const statusEl = document.getElementById('pose-status');
   if(statusEl) { statusEl.innerText = "Запуск камеры..."; statusEl.style.color = "#00e5ff"; }
   window.stopCamera();
-  setTimeout(initCamera, 500); // Полсекунды ожидания для разблокировки железа
+  if (pendingRestartTimeout) clearTimeout(pendingRestartTimeout); // не даём накопиться нескольким запускам подряд
+  pendingRestartTimeout = setTimeout(() => {
+    pendingRestartTimeout = null;
+    initCamera();
+  }, 500); // Полсекунды ожидания для разблокировки железа
 }
 
 function initCamera() {
@@ -131,6 +178,7 @@ function initCamera() {
     
     globalPose.onResults((results) => {
       isProcessing = false; // Снимаем предохранитель только после завершения кадра
+      lastResultReceived = Date.now();
       
       if (!window.__arenaActive) return;
 
@@ -150,6 +198,7 @@ function initCamera() {
       // ЖЕСТКИЙ ПРЕДОХРАНИТЕЛЬ: Игнорируем кадры, если предыдущий еще обрабатывается
       if (window.__arenaActive && videoElement.readyState >= 2 && !isProcessing) {
         isProcessing = true;
+        lastSendAttempt = Date.now();
         try {
           await globalPose.send({ image: videoElement }); 
         } catch (err) {
@@ -160,8 +209,13 @@ function initCamera() {
     }, 
     facingMode: 'user', width: 640, height: 480 
   });
-  
-  window.__activeCamera.start().catch(err => {
+
+  lastResultReceived = Date.now(); // даём стартовой фазе время на разгон, прежде чем сторож начнёт нервничать
+  isProcessing = false;
+
+  window.__activeCamera.start().then(() => {
+    startWatchdog();
+  }).catch(err => {
     const statusEl = document.getElementById('pose-status');
     if(statusEl) { statusEl.innerText = "Доступ к камере закрыт"; statusEl.style.color = "#ff2a40"; }
   });
