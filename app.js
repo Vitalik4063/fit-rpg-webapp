@@ -136,6 +136,19 @@ let currentExercise = 'pushup';
 let monsterAttackTimer = null, restRegenTimer = null;
 window.__arenaActive = false;
 
+// --- ФИШКА: КОМБО-СИСТЕМА ---
+// Повторения подряд без паузы дольше 4с наращивают множитель урона.
+let comboCount = 0;
+let comboResetTimer = null;
+const COMBO_WINDOW_MS = 4000;
+function getComboMultiplier(count) {
+  if (count >= 10) return 2.0;
+  if (count >= 5) return 1.5;
+  if (count >= 3) return 1.2;
+  return 1;
+}
+function resetCombo() { comboCount = 0; clearTimeout(comboResetTimer); comboResetTimer = null; }
+
 function saveState() { localStorage.setItem('fit_dark_state', JSON.stringify(gameState)); }
 function addGold(amount) { gameState.gold += amount; gameState.totalGoldEarned += amount; }
 
@@ -156,12 +169,46 @@ function showToast(text) {
 window.showAchDesc = (name, desc) => { showToast(`ℹ️ <b>${name}</b><br><span style="font-size:11px; font-weight:normal;">${desc}</span>`); };
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderShop(); renderAchievements(); updateTopBar(); updateGameUI();
+  renderShop(); renderAchievements(); updateTopBar(); updateGameUI(); updateDailyStreak();
   if (gameState.totalPushups > 0 || gameState.monsterIdx > 0) {
     document.getElementById('health-form').style.display = 'none';
     document.getElementById('continue-panel').style.display = 'block';
   }
 });
+
+// --- ФИШКА: ЕЖЕДНЕВНАЯ СЕРИЯ ---
+// Значок 🔥 в шапке раньше был просто картинкой "0 дн." и никогда не обновлялся.
+// Теперь он реально считает дни подряд с открытием игры и даёт бонус руды.
+function daysWord(n) {
+  const mod10 = n % 10, mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return 'день';
+  if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return 'дня';
+  return 'дней';
+}
+
+function renderStreakUI(count) {
+  const el = document.getElementById('top-streak');
+  if (el) el.innerText = `${count} ${daysWord(count)}`;
+}
+
+function updateDailyStreak() {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  let streak = JSON.parse(localStorage.getItem('fit_dark_streak') || 'null') || { lastDate: null, count: 0 };
+
+  if (streak.lastDate === todayStr) { renderStreakUI(streak.count); return; }
+
+  const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  streak.count = (streak.lastDate === yesterdayStr) ? streak.count + 1 : 1;
+  streak.lastDate = todayStr;
+  localStorage.setItem('fit_dark_streak', JSON.stringify(streak));
+  renderStreakUI(streak.count);
+
+  if (streak.count > 1) {
+    const bonus = Math.min(200, streak.count * 10);
+    addGold(bonus); saveState(); updateGameUI();
+    showToast(`🔥 Серия ${streak.count} ${daysWord(streak.count)} подряд! +${bonus} 💎`);
+  }
+}
 
 function enterGame() {
   document.getElementById('screen-onboarding').classList.remove('active');
@@ -205,6 +252,7 @@ function showTab(tabName) {
   } else { 
     stopCombatTimer(); 
     if (typeof stopCamera === 'function') stopCamera();
+    resetCombo();
   }
   if(tabName === 'camp') startRestRegen(); else stopRestRegen();
 }
@@ -271,26 +319,45 @@ function updateTopBar() {
 
 function onRepCompleted(type) {
   if (gameState.gameCompleted) return;
-  let dmg = type === 'pushup' ? getDamagePushup() : getDamageSquat();
+
+  // Комбо: повторения без пауз дольше 4с наращивают множитель урона
+  comboCount++;
+  clearTimeout(comboResetTimer);
+  comboResetTimer = setTimeout(resetCombo, COMBO_WINDOW_MS);
+  const comboMult = getComboMultiplier(comboCount);
+
+  // Шанс крита 15%
+  const isCrit = Math.random() < 0.15;
+
+  const baseDmg = type === 'pushup' ? getDamagePushup() : getDamageSquat();
+  const dmg = Math.max(1, Math.round(baseDmg * comboMult * (isCrit ? 2 : 1)));
   
   if(type === 'pushup') gameState.totalPushups++; else gameState.totalSquats++;
 
   addGold(5 + Math.floor(dmg * 0.02)); 
   currentMonsterHp = Math.max(0, currentMonsterHp - dmg);
   
-  if(tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
+  if(tg?.HapticFeedback) tg.HapticFeedback.impactOccurred(isCrit ? 'rigid' : 'heavy');
   const sprite = document.getElementById('monster-sprite');
   if(sprite) { sprite.classList.add('monster-hit-anim'); setTimeout(()=>sprite.classList.remove('monster-hit-anim'), 220); }
   
-  showDamagePopup(`-${dmg}`);
+  showDamagePopup(isCrit ? `КРИТ! -${dmg}` : `-${dmg}`, isCrit);
+  if (comboMult > 1) showComboPopup(comboCount);
+
   renderAchievements(); updateGameUI(); saveState();
   if (currentMonsterHp === 0) onMonsterDefeated();
 }
 
-function showDamagePopup(text) {
+function showDamagePopup(text, crit = false) {
   const c = document.getElementById('damage-popup-container');
-  const p = document.createElement('div'); p.className = 'damage-popup'; p.innerText = text;
+  const p = document.createElement('div'); p.className = 'damage-popup' + (crit ? ' crit' : ''); p.innerText = text;
   c.appendChild(p); setTimeout(() => p.remove(), 750);
+}
+
+function showComboPopup(count) {
+  const c = document.getElementById('damage-popup-container');
+  const p = document.createElement('div'); p.className = 'combo-popup'; p.innerText = `🔥 КОМБО x${count}`;
+  c.appendChild(p); setTimeout(() => p.remove(), 700);
 }
 
 function onMonsterDefeated() {
