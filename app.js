@@ -8,15 +8,6 @@ async function requestWakeLock() { try { if ('wakeLock' in navigator) { wakeLock
 // Логика переключения видимости
 document.addEventListener('visibilitychange', async () => {
   if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
-  
-  if (document.visibilityState === 'visible') {
-    if (window.__arenaActive && typeof restartCamera === 'function') {
-      // Даем браузеру 500мс, чтобы полностью "проснуться" после блокировки
-      setTimeout(restartCamera, 500);
-    }
-  } else {
-    if (typeof stopCamera === 'function') stopCamera();
-  }
 });
 
 function toRomanNum(n) { return ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][n] || String(n); }
@@ -248,10 +239,12 @@ function showTab(tabName) {
   
   if(tabName === 'arena') { 
     startCombatTimer(); 
-    if (typeof restartCamera === 'function') restartCamera();
+    // Запрашиваем доступ к камере ровно в момент входа на вкладку "Бой".
+    // initCamera() внутри сама следит, чтобы разрешение спрашивалось только
+    // один раз за сессию (или заново — если пользователь раньше его отклонил).
+    if (typeof initCamera === 'function') initCamera();
   } else { 
     stopCombatTimer(); 
-    if (typeof stopCamera === 'function') stopCamera();
     resetCombo();
   }
   if(tabName === 'camp') startRestRegen(); else stopRestRegen();
