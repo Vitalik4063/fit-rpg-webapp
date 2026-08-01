@@ -8,46 +8,19 @@ const CONFIG = {
   squat:  { downAngle: 100 + DIFFICULTY_ADJUST, upAngle: 155, maxFloorDistPct: 50 + FLOOR_ADJUST }
 };
 
-let globalPose = null; 
-let isProcessing = false; // ПРЕДОХРАНИТЕЛЬ ОТ ЗАВИСАНИЯ И ПЕРЕГРУЗКИ
-
-// --- АНТИ-ФРИЗ СИСТЕМА ---
-// Раньше камера иногда "залипала" на первом кадре: если promise send() зависал
-// (что бывает у MediaPipe после reset()/остановки потока на середине кадра),
-// isProcessing навсегда оставался true и новые кадры больше не отправлялись.
-// Ниже — сторож, который лечит это сам, плюс защита от гонок при быстром
-// переключении вкладок / сворачивании приложения.
-let lastSendAttempt = 0;
-let lastResultReceived = 0;
-let watchdogInterval = null;
-let pendingRestartTimeout = null;
-let autoRecovering = false;
-
-function startWatchdog() {
-  stopWatchdog();
-  watchdogInterval = setInterval(() => {
-    if (!window.__arenaActive) return;
-    const now = Date.now();
-
-    // Кадр "залип" в обработке дольше 4с — принудительно снимаем блокировку
-    if (isProcessing && lastSendAttempt && (now - lastSendAttempt > 4000)) {
-      isProcessing = false;
-    }
-
-    // Больше 6с вообще нет ни одного результата от модели — тихо переподключаемся один раз
-    if (!autoRecovering && lastResultReceived && (now - lastResultReceived > 6000)) {
-      autoRecovering = true;
-      const statusEl = document.getElementById('pose-status');
-      if (statusEl) { statusEl.innerText = "Переподключение..."; statusEl.style.color = "#ffdf00"; }
-      window.restartCamera();
-      setTimeout(() => { autoRecovering = false; }, 4000);
-    }
-  }, 2000);
-}
-
-function stopWatchdog() {
-  if (watchdogInterval) { clearInterval(watchdogInterval); watchdogInterval = null; }
-}
+// --- СОСТОЯНИЕ КАМЕРЫ ---
+// Раньше onFrame слал новый кадр в pose.send() на каждый rAF-тик, не дожидаясь,
+// пока обработается предыдущий. Если устройство не успевало (слабый телефон,
+// фон/сворачивание Telegram и т.п.), запросы копились друг на друга — и картинка
+// "залипала" на последнем удачном кадре. Плюс камера пересоздавалась заново при
+// каждом входе, что тоже могло подвесить старый поток.
+// Теперь: доступ к камере запрашивается ОДИН раз за сессию (при входе в игру),
+// поток остаётся жить постоянно, а обрабатываем/рисуем кадры только пока идёт
+// бой (window.__arenaActive) — без остановки и пересоздания самой камеры.
+let globalPose = null;
+let activeCamera = null;
+let isProcessing = false;
+let cameraRequested = false; // защищает от повторных запросов доступа к камере
 
 function resetExerciseStage() { poseState.stage = "UP"; }
 
@@ -59,7 +32,7 @@ function calculateAngle(A, B, C) {
 }
 
 // Отрисовка скелета
-function drawBone(ctx, p1, p2, color = "#00e5ff", width = 4) {
+function drawBone(ctx, p1, p2, color = "#ffef9f", width = 4) {
   if (!p1 || !p2 || p1.visibility < 0.3 || p2.visibility < 0.3) return;
   ctx.beginPath();
   ctx.moveTo(p1.x * ctx.canvas.width, p1.y * ctx.canvas.height);
@@ -69,7 +42,7 @@ function drawBone(ctx, p1, p2, color = "#00e5ff", width = 4) {
   ctx.stroke();
 }
 
-function drawJointPoint(ctx, p, color = "#9d4edd", radius = 5) {
+function drawJointPoint(ctx, p, color = "#f02a2a", radius = 5) {
   if (!p || p.visibility < 0.3) return;
   ctx.beginPath();
   ctx.arc(p.x * ctx.canvas.width, p.y * ctx.canvas.height, radius, 0, 2 * Math.PI);
@@ -78,19 +51,23 @@ function drawJointPoint(ctx, p, color = "#9d4edd", radius = 5) {
 }
 
 function drawFullSkeleton(ctx, lm, activeColor) {
-  drawBone(ctx, lm[11], lm[12], "#5a189a", 3);
-  drawBone(ctx, lm[11], lm[23], "#5a189a", 3);
-  drawBone(ctx, lm[12], lm[24], "#5a189a", 3);
-  drawBone(ctx, lm[23], lm[24], "#5a189a", 3);
+  // Торс
+  drawBone(ctx, lm[11], lm[12], "#d4af37", 3);
+  drawBone(ctx, lm[11], lm[23], "#d4af37", 3);
+  drawBone(ctx, lm[12], lm[24], "#d4af37", 3);
+  drawBone(ctx, lm[23], lm[24], "#d4af37", 3);
 
-  const armColor = currentExercise === 'pushup' ? activeColor : "#5a189a";
+  // Руки (выделяются при отжиманиях)
+  const armColor = currentExercise === 'pushup' ? activeColor : "#d4af37";
   drawBone(ctx, lm[11], lm[13], armColor, 5); drawBone(ctx, lm[13], lm[15], armColor, 5);
   drawBone(ctx, lm[12], lm[14], armColor, 5); drawBone(ctx, lm[14], lm[16], armColor, 5);
 
-  const legColor = currentExercise === 'squat' ? activeColor : "#5a189a";
+  // Ноги (выделяются при приседаниях)
+  const legColor = currentExercise === 'squat' ? activeColor : "#d4af37";
   drawBone(ctx, lm[23], lm[25], legColor, 5); drawBone(ctx, lm[25], lm[27], legColor, 5);
   drawBone(ctx, lm[24], lm[26], legColor, 5); drawBone(ctx, lm[26], lm[28], legColor, 5);
 
+  // Суставы
   [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28].forEach(idx => drawJointPoint(ctx, lm[idx]));
 }
 
@@ -102,8 +79,8 @@ function processPose(landmarks, ctx) {
   else { A = landmarks[23]; B = landmarks[25]; C = landmarks[27]; }
 
   if (!A || !B || !C || A.visibility < 0.4) {
-    statusEl.innerText = "Ищу тебя в кадре..."; statusEl.style.color = "#8888a0";
-    drawFullSkeleton(ctx, landmarks, "#333"); 
+    statusEl.innerText = "ВСТАНЬТЕ В КАДР"; statusEl.style.color = "#f02a2a";
+    drawFullSkeleton(ctx, landmarks, "#555"); // Отрисовка серым, если игрок вне позиции
     return;
   }
   
@@ -113,110 +90,81 @@ function processPose(landmarks, ctx) {
   document.getElementById('live-angle-val').innerText = currentAngle;
   document.getElementById('angle-meter-fill').style.width = `${Math.min(100, (currentAngle/180)*100)}%`;
 
-  const activeColor = currentAngle <= cfg.downAngle ? "#00e5ff" : "#9d4edd";
+  // Подсветка скелета
+  const activeColor = currentAngle <= cfg.downAngle ? "#39e079" : "#ffef9f";
   drawFullSkeleton(ctx, landmarks, activeColor);
 
-  if (currentAngle >= cfg.upAngle) { poseState.stage = "UP"; statusEl.innerText = "Опускайся"; statusEl.style.color = "#9d4edd"; }
+  if (currentAngle >= cfg.upAngle) { poseState.stage = "UP"; statusEl.innerText = "ГОТОВ (ОПУСКАЙСЯ)"; statusEl.style.color = "#ffef9f"; }
   if (currentAngle <= cfg.downAngle && floorDistPct <= cfg.maxFloorDistPct && poseState.stage === "UP") {
-    poseState.stage = "DOWN"; statusEl.innerText = "Вставай!"; statusEl.style.color = "#00e5ff";
+    poseState.stage = "DOWN"; statusEl.innerText = "ОТЛИЧНО! ВСТАВАЙ!"; statusEl.style.color = "#39e079";
     if (typeof onRepCompleted === 'function') onRepCompleted(currentExercise);
   }
 }
 
-// Глубокая остановка камеры и очистка памяти
-window.stopCamera = function() {
-  stopWatchdog();
-  if (pendingRestartTimeout) { clearTimeout(pendingRestartTimeout); pendingRestartTimeout = null; }
-
-  if (window.__activeCamera) {
-    try { window.__activeCamera.stop(); } catch(e) {}
-    window.__activeCamera = null;
-  }
-  const videoElement = document.getElementById('webcam');
-  if (videoElement) {
-    if (videoElement.srcObject) {
-      videoElement.srcObject.getTracks().forEach(track => track.stop());
-      videoElement.srcObject = null;
-    }
-    videoElement.pause();
-    videoElement.removeAttribute('src'); 
-    videoElement.load(); // Жесткий сброс элемента
-  }
-  // ВАЖНО: раньше здесь вызывался globalPose.reset(). Если это происходило пока
-  // предыдущий кадр ещё обрабатывался (send() не успел вернуть результат),
-  // promise мог никогда не завершиться — isProcessing оставался true навсегда,
-  // и камера "замирала" на первом кадре. Модель прекрасно переживает остановку
-  // потока и без reset(), поэтому просто снимаем предохранитель руками.
-  isProcessing = false;
-}
-
-window.restartCamera = function() {
-  const statusEl = document.getElementById('pose-status');
-  if(statusEl) { statusEl.innerText = "Запуск камеры..."; statusEl.style.color = "#00e5ff"; }
-  window.stopCamera();
-  if (pendingRestartTimeout) clearTimeout(pendingRestartTimeout); // не даём накопиться нескольким запускам подряд
-  pendingRestartTimeout = setTimeout(() => {
-    pendingRestartTimeout = null;
-    initCamera();
-  }, 500); // Полсекунды ожидания для разблокировки железа
-}
-
+// Запрашивает доступ к камере и один раз поднимает поток + модель.
+// Безопасно вызывать много раз — реально отработает только первый вызов за сессию.
 function initCamera() {
+  if (cameraRequested) return; // камеру уже просили — не спрашиваем повторно
+  cameraRequested = true;
+
   const videoElement = document.getElementById('webcam');
   const canvasElement = document.getElementById('canvas');
   const canvasCtx = canvasElement.getContext('2d');
-  
+
   if (typeof Pose === 'undefined' || typeof Camera === 'undefined') {
+    console.error("MediaPipe не загружен");
     const statusEl = document.getElementById('pose-status');
-    if(statusEl) { statusEl.innerText = "Сбой загрузки ядра"; statusEl.style.color = "#ff2a40"; }
+    if (statusEl) { statusEl.innerText = "Сбой загрузки ядра"; statusEl.style.color = "#f02a2a"; }
+    cameraRequested = false; // даём шанс попробовать снова
     return;
   }
-  
-  if (!globalPose) {
-    globalPose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
-    globalPose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-    
-    globalPose.onResults((results) => {
-      isProcessing = false; // Снимаем предохранитель только после завершения кадра
-      lastResultReceived = Date.now();
-      
-      if (!window.__arenaActive) return;
 
-      canvasElement.width = videoElement.videoWidth || 640;
-      canvasElement.height = videoElement.videoHeight || 480;
-      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-      canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
-      
-      if (results.poseLandmarks) {
-        processPose(results.poseLandmarks, canvasCtx);
-      }
-    });
-  }
+  globalPose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
+  globalPose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
 
-  window.__activeCamera = new Camera(videoElement, { 
-    onFrame: async () => { 
-      // ЖЕСТКИЙ ПРЕДОХРАНИТЕЛЬ: Игнорируем кадры, если предыдущий еще обрабатывается
-      if (window.__arenaActive && videoElement.readyState >= 2 && !isProcessing) {
-        isProcessing = true;
-        lastSendAttempt = Date.now();
-        try {
-          await globalPose.send({ image: videoElement }); 
-        } catch (err) {
-          console.error("Ошибка ИИ: ", err);
-          isProcessing = false; // Освобождаем принудительно в случае ошибки
-        }
-      }
-    }, 
-    facingMode: 'user', width: 640, height: 480 
+  globalPose.onResults((results) => {
+    if (!window.__arenaActive) return; // не тратим время на отрисовку вне боя
+
+    canvasElement.width = videoElement.videoWidth || 640;
+    canvasElement.height = videoElement.videoHeight || 480;
+    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+    canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+    if (results.poseLandmarks) {
+      processPose(results.poseLandmarks, canvasCtx);
+    }
   });
 
-  lastResultReceived = Date.now(); // даём стартовой фазе время на разгон, прежде чем сторож начнёт нервничать
-  isProcessing = false;
+  activeCamera = new Camera(videoElement, {
+    onFrame: async () => {
+      // ГЛАВНЫЙ ФИКС: не отправляем следующий кадр, пока не обработан предыдущий —
+      // именно отсутствие этой защиты раньше приводило к зависанию картинки.
+      if (isProcessing) return;
+      isProcessing = true;
+      try {
+        await globalPose.send({ image: videoElement });
+      } catch (err) {
+        console.error("Ошибка ИИ:", err);
+      } finally {
+        isProcessing = false;
+      }
+    },
+    facingMode: 'user', width: 640, height: 480
+  });
 
-  window.__activeCamera.start().then(() => {
-    startWatchdog();
-  }).catch(err => {
+  activeCamera.start().catch(err => {
+    console.error("Камера недоступна:", err);
     const statusEl = document.getElementById('pose-status');
-    if(statusEl) { statusEl.innerText = "Доступ к камере закрыт"; statusEl.style.color = "#ff2a40"; }
+    if (statusEl) { statusEl.innerText = "Доступ к камере закрыт"; statusEl.style.color = "#f02a2a"; }
+    cameraRequested = false; // разрешаем повторную попытку (например, по кнопке рестарта)
   });
 }
+
+window.initCamera = initCamera;
+
+// Заглушки для совместимости, если где-то в app.js ещё остались вызовы
+// stopCamera()/restartCamera() из старой логики с пересозданием потока —
+// теперь поток камеры не разрушается и не пересоздаётся при переключении вкладок,
+// поэтому эти функции ничего не ломают и просто не нужны по сути.
+window.stopCamera = function() {};
+window.restartCamera = function() { initCamera(); };
