@@ -8,19 +8,20 @@ const CONFIG = {
   squat:  { downAngle: 100 + DIFFICULTY_ADJUST, upAngle: 155, maxFloorDistPct: 50 + FLOOR_ADJUST }
 };
 
-// --- СОСТОЯНИЕ КАМЕРЫ ---
-// Раньше onFrame слал новый кадр в pose.send() на каждый rAF-тик, не дожидаясь,
-// пока обработается предыдущий. Если устройство не успевало (слабый телефон,
-// фон/сворачивание Telegram и т.п.), запросы копились друг на друга — и картинка
-// "залипала" на последнем удачном кадре. Плюс камера пересоздавалась заново при
-// каждом входе, что тоже могло подвесить старый поток.
-// Теперь: доступ к камере запрашивается ОДИН раз за сессию (при входе в игру),
-// поток остаётся жить постоянно, а обрабатываем/рисуем кадры только пока идёт
-// бой (window.__arenaActive) — без остановки и пересоздания самой камеры.
+// --- КАМЕРА: ПОЛНОСТЬЮ РУЧНАЯ РЕАЛИЗАЦИЯ ---
+// Раньше поток запускался через класс Camera из @mediapipe/camera_utils.
+// Это старая, давно не обновлявшаяся обёртка, у которой есть известные проблемы
+// именно внутри мобильных WebView (в т.ч. Telegram): она может не поднять поток
+// без внятной ошибки, использовать constraints, которые устройство не поддерживает
+// (OverconstrainedError), и не даёт понятной диагностики.
+// Здесь мы получаем поток сами через getUserMedia, с постепенным ослаблением
+// требований к камере, и гоним кадры в модель через собственный requestAnimationFrame
+// цикл с защитой от параллельной обработки. Плюс любая ошибка на любом этапе
+// теперь пишется прямо в статус на экране, а не тонет в консоли.
 let globalPose = null;
-let activeCamera = null;
 let isProcessing = false;
-let cameraRequested = false; // защищает от повторных запросов доступа к камере
+let cameraRequested = false; // защищает от повторных попыток за один и тот же "заход"
+let rafId = null;
 
 function resetExerciseStage() { poseState.stage = "UP"; }
 
@@ -101,26 +102,83 @@ function processPose(landmarks, ctx) {
   }
 }
 
-// Запрашивает доступ к камере и один раз поднимает поток + модель.
-// Безопасно вызывать много раз — реально отработает только первый вызов за сессию.
-function initCamera() {
-  if (cameraRequested) return; // камеру уже просили — не спрашиваем повторно
+function setStatus(text, color) {
+  const statusEl = document.getElementById('pose-status');
+  if (statusEl) { statusEl.innerText = text; statusEl.style.color = color; }
+}
+
+// Пробуем получить поток камеры, постепенно ослабляя требования — некоторые
+// устройства/вебвью не поддерживают "точные" constraints и падают с
+// OverconstrainedError, хотя камера у них есть и прекрасно работает.
+async function getCameraStream() {
+  const attempts = [
+    { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
+    { video: { facingMode: 'user' }, audio: false },
+    { video: true, audio: false }
+  ];
+  let lastErr = null;
+  for (const constraints of attempts) {
+    try {
+      return await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr;
+}
+
+// Запрашивает доступ к камере и поднимает поток + модель.
+// Безопасно вызывать много раз — при успехе повторные вызовы ничего не делают,
+// при неудаче следующий вызов (например, при повторном заходе на вкладку "Бой")
+// честно пробует снова.
+async function initCamera() {
+  if (cameraRequested) return;
   cameraRequested = true;
 
   const videoElement = document.getElementById('webcam');
   const canvasElement = document.getElementById('canvas');
   const canvasCtx = canvasElement.getContext('2d');
 
-  if (typeof Pose === 'undefined' || typeof Camera === 'undefined') {
-    console.error("MediaPipe не загружен");
-    const statusEl = document.getElementById('pose-status');
-    if (statusEl) { statusEl.innerText = "Сбой загрузки ядра"; statusEl.style.color = "#f02a2a"; }
-    cameraRequested = false; // даём шанс попробовать снова
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    setStatus("Браузер не поддерживает камеру", "#f02a2a");
+    cameraRequested = false;
+    return;
+  }
+  if (typeof Pose === 'undefined') {
+    setStatus("Не удалось загрузить ИИ-модель. Проверьте интернет", "#f02a2a");
+    cameraRequested = false;
     return;
   }
 
-  globalPose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
-  globalPose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+  setStatus("Запрашиваем доступ к камере...", "#ffef9f");
+
+  let stream;
+  try {
+    stream = await getCameraStream();
+  } catch (err) {
+    console.error("getUserMedia error:", err);
+    if (err && err.name === 'NotAllowedError') setStatus("Доступ к камере запрещён. Разрешите в настройках", "#f02a2a");
+    else if (err && err.name === 'NotFoundError') setStatus("Камера не найдена на устройстве", "#f02a2a");
+    else if (err && err.name === 'NotReadableError') setStatus("Камера занята другим приложением", "#f02a2a");
+    else setStatus("Не удалось включить камеру", "#f02a2a");
+    cameraRequested = false;
+    return;
+  }
+
+  videoElement.srcObject = stream;
+  try { await videoElement.play(); } catch (e) { /* некоторые браузеры сами запускают autoplay */ }
+
+  setStatus("Загружаем ИИ-модель...", "#ffef9f");
+
+  try {
+    globalPose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
+    globalPose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+  } catch (err) {
+    console.error("Pose init error:", err);
+    setStatus("Сбой загрузки ИИ-ядра", "#f02a2a");
+    cameraRequested = false;
+    return;
+  }
 
   globalPose.onResults((results) => {
     if (!window.__arenaActive) return; // не тратим время на отрисовку вне боя
@@ -135,41 +193,28 @@ function initCamera() {
     }
   });
 
-  activeCamera = new Camera(videoElement, {
-    onFrame: async () => {
-      // Пока пользователь не на вкладке "Бой" — не гоняем кадры через модель,
-      // это экономит батарею. Сам видеопоток при этом НЕ останавливаем и НЕ
-      // пересоздаём, поэтому при возврате на вкладку камера включается мгновенно,
-      // без повторного запроса разрешения и без пересоздания источника.
-      if (!window.__arenaActive) return;
-      // ГЛАВНЫЙ ФИКС: не отправляем следующий кадр, пока не обработан предыдущий —
-      // именно отсутствие этой защиты раньше приводило к зависанию картинки.
-      if (isProcessing) return;
-      isProcessing = true;
-      try {
-        await globalPose.send({ image: videoElement });
-      } catch (err) {
-        console.error("Ошибка ИИ:", err);
-      } finally {
-        isProcessing = false;
-      }
-    },
-    facingMode: 'user', width: 640, height: 480
-  });
+  setStatus("Ищу тебя в кадре...", "#ffef9f");
 
-  activeCamera.start().catch(err => {
-    console.error("Камера недоступна:", err);
-    const statusEl = document.getElementById('pose-status');
-    if (statusEl) { statusEl.innerText = "Доступ к камере закрыт"; statusEl.style.color = "#f02a2a"; }
-    cameraRequested = false; // разрешаем повторную попытку (например, по кнопке рестарта)
-  });
+  // Собственный цикл кадров вместо класса Camera. Защита isProcessing —
+  // ГЛАВНЫЙ фикс: без неё кадры отправлялись в модель быстрее, чем она успевала
+  // их обрабатывать, запросы копились друг на друга, и картинка "залипала".
+  function frameLoop() {
+    rafId = requestAnimationFrame(frameLoop);
+    if (!window.__arenaActive || isProcessing) return;
+    if (videoElement.readyState < 2) return; // видео ещё не готово отдавать кадры
+    isProcessing = true;
+    globalPose.send({ image: videoElement })
+      .catch(err => console.error("Ошибка ИИ:", err))
+      .finally(() => { isProcessing = false; });
+  }
+  if (rafId) cancelAnimationFrame(rafId);
+  frameLoop();
 }
 
 window.initCamera = initCamera;
 
-// Заглушки для совместимости, если где-то в app.js ещё остались вызовы
-// stopCamera()/restartCamera() из старой логики с пересозданием потока —
-// теперь поток камеры не разрушается и не пересоздаётся при переключении вкладок,
-// поэтому эти функции ничего не ломают и просто не нужны по сути.
+// Заглушки для совместимости со старым кодом, если где-то ещё вызываются
+// stopCamera()/restartCamera() — поток камеры больше не разрушается и не
+// пересоздаётся при переключении вкладок, поэтому реального действия не требуется.
 window.stopCamera = function() {};
 window.restartCamera = function() { initCamera(); };
