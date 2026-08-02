@@ -117,11 +117,35 @@ const ACHIEVEMENTS = [
   { id: "g5", name: "Дракон", desc: "Собери 1,000,000 золота", type: "gold", target: 1000000, reward: 200000, icon: "🐉" }
 ];
 
-let gameState = JSON.parse(localStorage.getItem('fit_dark_state')) || {
+// ЗАЩИТА ОТ СТАРЫХ СОХРАНЕНИЙ: раньше строка ниже была `JSON.parse(...) || {дефолты}` —
+// это подставляло дефолты ТОЛЬКО если в localStorage вообще ничего не было. Если же
+// там лежало сохранение из более ранней версии игры (например, без поля
+// claimedAchievements или inventory), эти поля оставались undefined, и любое
+// обращение к ним (.includes(...) и т.п.) кидало исключение. Именно из-за этого
+// пропадали титулы и переставало обновляться HP врага — ошибка обрывала
+// выполнение renderAchievements()/updateGameUI() на полпути.
+// Теперь сохранённое состояние аккуратно доливается поверх полного набора
+// дефолтов, так что новые поля всегда на месте, даже в старых сохранениях.
+const DEFAULT_STATE = {
   monsterIdx: 0, playerHp: 100, gold: 0, totalPushups: 0, totalSquats: 0, totalGoldEarned: 0,
   equippedWeapon: "w1", equippedBoots: "b1", equippedArmor: "a1", inventory: ["w1", "b1", "a1"],
-  claimedAchievements: [], gameCompleted: false
+  claimedAchievements: [], gameCompleted: false,
+  unlockedSeen: [] // ФИШКА: список титулов, о разблокировке которых уже показали баннер
 };
+const _savedRaw = JSON.parse(localStorage.getItem('fit_dark_state') || 'null') || {};
+let gameState = Object.assign({}, DEFAULT_STATE, _savedRaw);
+if (!Array.isArray(_savedRaw.unlockedSeen)) {
+  // Сохранение из версии без баннеров титулов — отмечаем уже достигнутый прогресс
+  // как "увиденный", чтобы не засыпать игрока баннерами за то, что он и так давно прошёл.
+  gameState.unlockedSeen = ACHIEVEMENTS.filter(a => {
+    let cur = 0;
+    if (a.type === 'pushups') cur = gameState.totalPushups;
+    if (a.type === 'squats') cur = gameState.totalSquats;
+    if (a.type === 'chapter') cur = Math.floor(gameState.monsterIdx / 5);
+    if (a.type === 'gold') cur = gameState.totalGoldEarned || gameState.gold;
+    return cur >= a.target;
+  }).map(a => a.id);
+}
 let currentMonsterHp = MONSTERS[gameState.monsterIdx]?.hp || MONSTERS[MONSTERS.length - 1].hp;
 let currentExercise = 'pushup';
 let monsterAttackTimer = null, restRegenTimer = null;
@@ -310,7 +334,7 @@ function updateTopBar() {
   document.getElementById('top-level').innerText = gameState.monsterIdx + 1;
 }
 
-function onRepCompleted(type) {
+function onRepCompleted(type, angle, targetAngle) {
   if (gameState.gameCompleted) return;
 
   // Комбо: повторения без пауз дольше 4с наращивают множитель урона
@@ -322,8 +346,12 @@ function onRepCompleted(type) {
   // Шанс крита 15%
   const isCrit = Math.random() < 0.15;
 
+  // ФИШКА: бонус за глубину — если ушёл заметно ниже минимально нужного угла
+  // (не просто "для галочки", а с хорошим запасом), даём +15% урона.
+  const isDeep = (typeof angle === 'number' && typeof targetAngle === 'number') && (targetAngle - angle >= 15);
+
   const baseDmg = type === 'pushup' ? getDamagePushup() : getDamageSquat();
-  const dmg = Math.max(1, Math.round(baseDmg * comboMult * (isCrit ? 2 : 1)));
+  const dmg = Math.max(1, Math.round(baseDmg * comboMult * (isCrit ? 2 : 1) * (isDeep ? 1.15 : 1)));
   
   if(type === 'pushup') gameState.totalPushups++; else gameState.totalSquats++;
 
@@ -336,6 +364,7 @@ function onRepCompleted(type) {
   
   showDamagePopup(isCrit ? `КРИТ! -${dmg}` : `-${dmg}`, isCrit);
   if (comboMult > 1) showComboPopup(comboCount);
+  if (isDeep && !isCrit) showDepthPopup();
 
   renderAchievements(); updateGameUI(); saveState();
   if (currentMonsterHp === 0) onMonsterDefeated();
@@ -350,6 +379,12 @@ function showDamagePopup(text, crit = false) {
 function showComboPopup(count) {
   const c = document.getElementById('damage-popup-container');
   const p = document.createElement('div'); p.className = 'combo-popup'; p.innerText = `🔥 КОМБО x${count}`;
+  c.appendChild(p); setTimeout(() => p.remove(), 700);
+}
+
+function showDepthPopup() {
+  const c = document.getElementById('damage-popup-container');
+  const p = document.createElement('div'); p.className = 'depth-popup'; p.innerText = `ГЛУБОКО! +15%`;
   c.appendChild(p); setTimeout(() => p.remove(), 700);
 }
 
@@ -440,6 +475,25 @@ function renderAchievements() {
     if(a.type==='gold') cur = gameState.totalGoldEarned || gameState.gold;
     return { cur, t, unl: cur >= t };
   };
+
+  // ФИШКА: раньше открытие титула было заметно только если сам зайти во вкладку
+  // "Титулы" и приглядеться к списку. Теперь при разблокировке сразу выскакивает баннер.
+  const newlyUnlocked = [];
+  ACHIEVEMENTS.forEach(ach => {
+    const { unl } = evalAch(ach);
+    if (unl && !gameState.unlockedSeen.includes(ach.id)) {
+      gameState.unlockedSeen.push(ach.id);
+      newlyUnlocked.push(ach);
+    }
+  });
+  if (newlyUnlocked.length > 0) {
+    saveState();
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    newlyUnlocked.forEach((ach, i) => {
+      setTimeout(() => showBanner(`🏆 НОВЫЙ ТИТУЛ`, `${ach.icon} ${ach.name}`), i * 2400);
+    });
+  }
+
   document.getElementById('achievements-list').innerHTML = ACHIEVEMENTS.map(ach => {
     const { cur, t, unl } = evalAch(ach); const clmd = gameState.claimedAchievements.includes(ach.id);
     return `<div class="achieve-card ${unl?'unlocked':''} ${clmd?'claimed':''}" onclick="showAchDesc('${ach.name}', '${ach.desc}')">
@@ -450,6 +504,9 @@ function renderAchievements() {
       ${unl ? (clmd ? `<span style="color:var(--neon-cyan); font-size:10px; font-weight:800; margin-top:4px;">✓ ПОЛУЧЕНО</span>` : `<button class="btn-claim" onclick="event.stopPropagation(); window.claimAch('${ach.id}')">ЗАБРАТЬ +${ach.reward}💎</button>`) : ''}
     </div>`;
   }).join('');
+
+  const countEl = document.getElementById('achievements-count');
+  if (countEl) countEl.innerText = `${gameState.unlockedSeen.length} / ${ACHIEVEMENTS.length} открыто`;
 }
 window.claimAch = (id) => {
   if(gameState.claimedAchievements.includes(id)) return;
