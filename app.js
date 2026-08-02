@@ -1,7 +1,7 @@
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 
-// Защита экрана от выключения
+// Защита экрана от выключения (тух при неактивности) (посмотреть правильно ли написал код или нет)
 let wakeLock = null;
 async function requestWakeLock() { try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch (err) {} }
 
@@ -12,8 +12,8 @@ document.addEventListener('visibilitychange', async () => {
 
 function toRomanNum(n) { return ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][n] || String(n); }
 
-// Хелпер для картинок из assets/ вместо эмодзи. onerror прячет иконку, если файл
-// вдруг не найден/переименован — чтобы вместо "битой картинки" было пусто, а не мусор.
+// Хелпер для картинок из assets/ вместо эмоджи. onerror прячет иконку, если файл
+// вдруг не найден/переименован — чтобы вместо "битой картинки" было пусто, а не шлак.
 function assetIcon(path) {
   return `<img src="${path}" style="width:100%; height:100%; object-fit:contain;" onerror="this.style.display='none'">`;
 }
@@ -30,7 +30,7 @@ const MONSTERS_RAW = [];
 // ФИШКА-БАЛАНС: 1 повторение (отжимание/приседание) базовым снаряжением = -1 HP врагу.
 // HP монстров уменьшено в 10 раз (баланс между главами сохранён — просто удобнее считать),
 // урон стартового оружия/сапог тоже /10 (см. SHOP_ITEMS ниже). Периодическая атака монстра
-// по игроку (atk) оставлена прежней — формула скорректирована, чтобы значения не поменялись.
+// по игроку (atk) оставлена прежней - формула скорректирована, чтобы значения не поменялись.
 const baseHp = [3, 20, 80, 250, 800, 2500, 8000, 25000, 100000, 500000];
 const baseGold = [5, 20, 80, 250, 800, 2500, 8000, 25000, 100000, 500000];
 const icons = [
@@ -138,14 +138,7 @@ const ACHIEVEMENTS = [
 ACHIEVEMENTS.forEach((a, idx) => { a.icon = assetIcon(`assets/minerals/Icon${idx + 1}.png`); });
 
 // ЗАЩИТА ОТ СТАРЫХ СОХРАНЕНИЙ: раньше строка ниже была `JSON.parse(...) || {дефолты}` —
-// это подставляло дефолты ТОЛЬКО если в localStorage вообще ничего не было. Если же
-// там лежало сохранение из более ранней версии игры (например, без поля
-// claimedAchievements или inventory), эти поля оставались undefined, и любое
-// обращение к ним (.includes(...) и т.п.) кидало исключение. Именно из-за этого
-// пропадали титулы и переставало обновляться HP врага — ошибка обрывала
-// выполнение renderAchievements()/updateGameUI() на полпути.
-// Теперь сохранённое состояние аккуратно доливается поверх полного набора
-// дефолтов, так что новые поля всегда на месте, даже в старых сохранениях.
+// это подставляло дефолты ТОЛЬКО если в localStorage вообще ничего не было.
 const DEFAULT_STATE = {
   monsterIdx: 0, playerHp: 100, gold: 0, totalPushups: 0, totalSquats: 0, totalGoldEarned: 0,
   equippedWeapon: "w1", equippedBoots: "b1", equippedArmor: "a1", inventory: ["w1", "b1", "a1"],
@@ -171,7 +164,7 @@ let currentExercise = 'pushup';
 let monsterAttackTimer = null, restRegenTimer = null;
 window.__arenaActive = false;
 
-// --- ФИШКА: КОМБО-СИСТЕМА ---
+// ФИШКА: КОМБО-СИСТЕМА
 // Повторения подряд без паузы дольше 4с наращивают множитель урона.
 let comboCount = 0;
 let comboResetTimer = null;
@@ -283,7 +276,7 @@ function showTab(tabName) {
   
   if(tabName === 'arena') { 
     startCombatTimer(); 
-    // Запрашиваем доступ к камере ровно в момент входа на вкладку "Бой".
+    // Запрос доступа к камере ровно в момент входа на вкладку "Бой".
     // initCamera() внутри сама следит, чтобы разрешение спрашивалось только
     // один раз за сессию (или заново — если пользователь раньше его отклонил).
     if (typeof initCamera === 'function') initCamera();
@@ -363,11 +356,11 @@ function onRepCompleted(type, angle, targetAngle) {
   comboResetTimer = setTimeout(resetCombo, COMBO_WINDOW_MS);
   const comboMult = getComboMultiplier(comboCount);
 
-  // Шанс крита 15%
+  // Шанс крита 15% (подумаю, может уменьшу или увеличу!!!)
   const isCrit = Math.random() < 0.15;
 
   // ФИШКА: бонус за глубину — если ушёл заметно ниже минимально нужного угла
-  // (не просто "для галочки", а с хорошим запасом), даём +15% урона.
+  // (не просто "для галочки", а с хорошим запасом), даём +15% урона. (можно тоже увеличить, по запросу, мб появится дисбаланс)
   const isDeep = (typeof angle === 'number' && typeof targetAngle === 'number') && (targetAngle - angle >= 15);
 
   const baseDmg = type === 'pushup' ? getDamagePushup() : getDamageSquat();
