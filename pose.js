@@ -98,7 +98,7 @@ function processPose(landmarks, ctx) {
   if (currentAngle >= cfg.upAngle) { poseState.stage = "UP"; statusEl.innerText = "ГОТОВ (ОПУСКАЙСЯ)"; statusEl.style.color = "#ffef9f"; }
   if (currentAngle <= cfg.downAngle && floorDistPct <= cfg.maxFloorDistPct && poseState.stage === "UP") {
     poseState.stage = "DOWN"; statusEl.innerText = "ОТЛИЧНО! ВСТАВАЙ!"; statusEl.style.color = "#39e079";
-    if (typeof onRepCompleted === 'function') onRepCompleted(currentExercise);
+    if (typeof onRepCompleted === 'function') onRepCompleted(currentExercise, currentAngle, cfg.downAngle);
   }
 }
 
