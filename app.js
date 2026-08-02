@@ -21,7 +21,11 @@ const CHAPTERS = [
 ];
 
 const MONSTERS_RAW = [];
-const baseHp = [30, 200, 800, 2500, 8000, 25000, 80000, 250000, 1000000, 5000000];
+// ФИШКА-БАЛАНС: 1 повторение (отжимание/приседание) базовым снаряжением = -1 HP врагу.
+// HP монстров уменьшено в 10 раз (баланс между главами сохранён — просто удобнее считать),
+// урон стартового оружия/сапог тоже /10 (см. SHOP_ITEMS ниже). Периодическая атака монстра
+// по игроку (atk) оставлена прежней — формула скорректирована, чтобы значения не поменялись.
+const baseHp = [3, 20, 80, 250, 800, 2500, 8000, 25000, 100000, 500000];
 const baseGold = [5, 20, 80, 250, 800, 2500, 8000, 25000, 100000, 500000];
 const icons = [
   ["🧟", "👹", "🧙‍♂️", "🧌", "👑"], ["🐌", "🧟‍♂️", "👺", "🧙‍♀️", "🐊"], ["💀", "🗿", "👻", "🦇", "🐉"],
@@ -42,7 +46,7 @@ for(let i=0; i<10; i++) {
     const isBoss = (j === 4); const multiplier = 1 + (j * 0.5) + (isBoss ? 2 : 0);
     MONSTERS_RAW.push({
       chapter: i+1, name: names[i][j], hp: Math.floor(baseHp[i] * multiplier),
-      icon: icons[i][j], gold: Math.floor(baseGold[i] * multiplier), atk: Math.floor((baseHp[i]/10)*multiplier), isBoss
+      icon: icons[i][j], gold: Math.floor(baseGold[i] * multiplier), atk: Math.floor(baseHp[i] * multiplier), isBoss
     });
   }
 }
@@ -64,22 +68,22 @@ const SHOP_ITEMS = {
     { id: "a7", name: "Рудный Панцирь", hp: 150000, price: 900000, icon: "<img src='assets/minerals/Icons_01.png' style='width:100%; height:100%; object-fit:contain;'>", rarity: "divine" }
   ],
   weapons: [ 
-    { id: "w1", name: "Ржавый Меч", damage: 10, price: 0, icon: "🗡️", rarity: "common" },
-    { id: "w2", name: "Рубиновый Клинок", damage: 30, price: 60, icon: "♦️", rarity: "rare" },
-    { id: "w3", name: "Изумрудный Топор", damage: 150, price: 400, icon: "❇️", rarity: "epic" },
-    { id: "w4", name: "Алмазный Секач", damage: 800, price: 3000, icon: "💎", rarity: "legendary" },
-    { id: "w5", name: "Раскалыватель", damage: 4000, price: 20000, icon: "🌋", rarity: "mythic" },
-    { id: "w6", name: "Коса Смерти", damage: 25000, price: 150000, icon: "🪓", rarity: "divine" },
-    { id: "w7", name: "Коготь Гоблина", damage: 100000, price: 900000, icon: "<img src='assets/goblins/Icons_01.png' style='width:100%; height:100%; object-fit:contain;'>", rarity: "divine" }
+    { id: "w1", name: "Ржавый Меч", damage: 1, price: 0, icon: "🗡️", rarity: "common" },
+    { id: "w2", name: "Рубиновый Клинок", damage: 3, price: 60, icon: "♦️", rarity: "rare" },
+    { id: "w3", name: "Изумрудный Топор", damage: 15, price: 400, icon: "❇️", rarity: "epic" },
+    { id: "w4", name: "Алмазный Секач", damage: 80, price: 3000, icon: "💎", rarity: "legendary" },
+    { id: "w5", name: "Раскалыватель", damage: 400, price: 20000, icon: "🌋", rarity: "mythic" },
+    { id: "w6", name: "Коса Смерти", damage: 2500, price: 150000, icon: "🪓", rarity: "divine" },
+    { id: "w7", name: "Коготь Гоблина", damage: 10000, price: 900000, icon: "<img src='assets/goblins/Icons_01.png' style='width:100%; height:100%; object-fit:contain;'>", rarity: "divine" }
   ],
   boots: [ 
-    { id: "b1", name: "Старые Сапоги", damage: 10, price: 0, icon: "🥾", rarity: "common" },
-    { id: "b2", name: "Тяжелые Поножи", damage: 30, price: 60, icon: "⚙️", rarity: "rare" },
-    { id: "b3", name: "Мифриловые Поножи", damage: 150, price: 400, icon: "🌟", rarity: "epic" },
-    { id: "b4", name: "Шаги Землетрясения", damage: 800, price: 3000, icon: "🌍", rarity: "legendary" },
-    { id: "b5", name: "Ледяные Сапоги", damage: 4000, price: 20000, icon: "❄️", rarity: "mythic" },
-    { id: "b6", name: "Поступь Хаоса", damage: 25000, price: 150000, icon: "🌌", rarity: "divine" },
-    { id: "b7", name: "Шахтёрские Сапоги", damage: 100000, price: 900000, icon: "<img src='assets/mine/Icons_01.png' style='width:100%; height:100%; object-fit:contain;'>", rarity: "divine" }
+    { id: "b1", name: "Старые Сапоги", damage: 1, price: 0, icon: "🥾", rarity: "common" },
+    { id: "b2", name: "Тяжелые Поножи", damage: 3, price: 60, icon: "⚙️", rarity: "rare" },
+    { id: "b3", name: "Мифриловые Поножи", damage: 15, price: 400, icon: "🌟", rarity: "epic" },
+    { id: "b4", name: "Шаги Землетрясения", damage: 80, price: 3000, icon: "🌍", rarity: "legendary" },
+    { id: "b5", name: "Ледяные Сапоги", damage: 400, price: 20000, icon: "❄️", rarity: "mythic" },
+    { id: "b6", name: "Поступь Хаоса", damage: 2500, price: 150000, icon: "🌌", rarity: "divine" },
+    { id: "b7", name: "Шахтёрские Сапоги", damage: 10000, price: 900000, icon: "<img src='assets/mine/Icons_01.png' style='width:100%; height:100%; object-fit:contain;'>", rarity: "divine" }
   ]
 };
 
@@ -324,8 +328,8 @@ function loadMonster() {
 }
 
 function getMaxHp() { const armor = SHOP_ITEMS.armors.find(a => a.id === gameState.equippedArmor); return 100 + (armor ? armor.hp : 0); }
-function getDamagePushup() { const w = SHOP_ITEMS.weapons.find(w => w.id === gameState.equippedWeapon); return w ? w.damage : 10; }
-function getDamageSquat() { const b = SHOP_ITEMS.boots.find(b => b.id === gameState.equippedBoots); return b ? b.damage : 10; }
+function getDamagePushup() { const w = SHOP_ITEMS.weapons.find(w => w.id === gameState.equippedWeapon); return w ? w.damage : 1; }
+function getDamageSquat() { const b = SHOP_ITEMS.boots.find(b => b.id === gameState.equippedBoots); return b ? b.damage : 1; }
 
 function updateTopBar() {
   let rank = "E"; const chap = Math.floor(gameState.monsterIdx / 5) + 1;
