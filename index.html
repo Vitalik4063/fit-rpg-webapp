@@ -6,7 +6,6 @@
   <title>Без названия</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -99,7 +98,7 @@
 
       <!-- КАМЕРА И ВАШИ ХП (Снизу) -->
       <div class="camera-wrapper">
-        <video id="webcam" autoplay muted playsinline style="display:none;"></video>
+        <video id="webcam" autoplay muted playsinline style="position:absolute; width:2px; height:2px; opacity:0; pointer-events:none;"></video>
         <canvas id="canvas"></canvas>
         <div class="camera-overlay-gradient"></div>
 
