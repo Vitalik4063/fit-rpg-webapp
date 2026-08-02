@@ -393,7 +393,8 @@ function updateGameUI() {
 
   document.getElementById('dmg-pushup-val').innerText = getDamagePushup();
   document.getElementById('dmg-squat-val').innerText = getDamageSquat();
-  document.getElementById('rep-count').innerText = `${gameState.totalPushups} | ${gameState.totalSquats}`;
+  const repCountEl = document.getElementById('rep-count');
+  if (repCountEl) repCountEl.innerText = `${gameState.totalPushups} | ${gameState.totalSquats}`;
 }
 
 function renderShop() {
