@@ -266,5 +266,8 @@ body.neon-fantasy-theme {
 /* ФИШКА: комбо-попап */
 .combo-popup { position: absolute; left: 50%; top: -6px; transform: translateX(-50%); font-size: 15px; font-weight: 900; letter-spacing: 0.5px; color: var(--neon-cyan); text-shadow: 0 0 10px rgba(0,229,255,0.8); pointer-events: none; animation: comboPopAnim 0.7s ease forwards; z-index: 101; white-space: nowrap; }
 @keyframes comboPopAnim { 0% { opacity: 0; transform: translateX(-50%) translateY(5px) scale(0.7); } 30% { opacity: 1; transform: translateX(-50%) translateY(-8px) scale(1.15); } 100% { opacity: 0; transform: translateX(-50%) translateY(-22px) scale(1); } }
+
+/* ФИШКА: попап за глубокое выполнение упражнения */
+.depth-popup { position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%); font-size: 13px; font-weight: 900; letter-spacing: 0.3px; color: var(--neon-purple, #9d4edd); text-shadow: 0 0 10px rgba(157,78,221,0.8); pointer-events: none; animation: comboPopAnim 0.7s ease forwards; z-index: 101; white-space: nowrap; }
 .monster-hit-anim { animation: hitImpact 0.2s ease-in-out !important; }
 @keyframes hitImpact { 0%{transform:scale(1);} 30%{transform:scale(0.8) rotate(-15deg); filter: brightness(3) sepia(1);} 100%{transform:scale(1);} }
