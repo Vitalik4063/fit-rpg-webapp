@@ -127,6 +127,20 @@ async function getCameraStream() {
   throw lastErr;
 }
 
+// Ждём, пока библиотека Pose реально проинициализируется в window.
+// Раньше здесь была мгновенная проверка typeof Pose === 'undefined', и если
+// скрипт библиотеки по любой причине ещё не успел выполниться (гонка загрузки,
+// особенности сети/WebView), запрос камеры прерывался ДО показа системного
+// диалога разрешения — из-за этого разрешение спрашивалось не с первого раза.
+async function waitForPose(timeoutMs = 6000) {
+  const start = Date.now();
+  while (typeof Pose === 'undefined') {
+    if (Date.now() - start > timeoutMs) return false;
+    await new Promise(r => setTimeout(r, 100));
+  }
+  return true;
+}
+
 // Запрашивает доступ к камере и поднимает поток + модель.
 // Безопасно вызывать много раз — при успехе повторные вызовы ничего не делают,
 // при неудаче следующий вызов (например, при повторном заходе на вкладку "Бой")
@@ -144,12 +158,9 @@ async function initCamera() {
     cameraRequested = false;
     return;
   }
-  if (typeof Pose === 'undefined') {
-    setStatus("Не удалось загрузить ИИ-модель. Проверьте интернет", "#f02a2a");
-    cameraRequested = false;
-    return;
-  }
 
+  // Сначала — разрешение камеры. Это самый важный шаг с системным диалогом,
+  // и он не должен зависеть от того, успела ли уже прогрузиться модель.
   setStatus("Запрашиваем доступ к камере...", "#ffef9f");
 
   let stream;
@@ -170,6 +181,13 @@ async function initCamera() {
 
   setStatus("Загружаем ИИ-модель...", "#ffef9f");
 
+  const poseReady = await waitForPose();
+  if (!poseReady) {
+    setStatus("Не удалось загрузить ИИ-модель. Проверьте интернет", "#f02a2a");
+    cameraRequested = false;
+    return;
+  }
+
   try {
     globalPose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
     globalPose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
@@ -183,13 +201,22 @@ async function initCamera() {
   globalPose.onResults((results) => {
     if (!window.__arenaActive) return; // не тратим время на отрисовку вне боя
 
-    canvasElement.width = videoElement.videoWidth || 640;
-    canvasElement.height = videoElement.videoHeight || 480;
-    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-    canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+    // ЗАЩИТА: раньше ошибка в игровой логике (processPose -> onRepCompleted -> ...)
+    // могла прервать этот колбэк исключением ПРЯМО ВНУТРИ обработки MediaPipe —
+    // тогда promise от send() мог никогда не завершиться, isProcessing навсегда
+    // оставался true, и камера "замирала" именно в момент засчитывания повтора.
+    // Теперь любая ошибка здесь только логируется, но не вырывается наружу.
+    try {
+      canvasElement.width = videoElement.videoWidth || 640;
+      canvasElement.height = videoElement.videoHeight || 480;
+      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
-    if (results.poseLandmarks) {
-      processPose(results.poseLandmarks, canvasCtx);
+      if (results.poseLandmarks) {
+        processPose(results.poseLandmarks, canvasCtx);
+      }
+    } catch (err) {
+      console.error("Ошибка обработки кадра (не блокирует камеру):", err);
     }
   });
 
@@ -198,11 +225,22 @@ async function initCamera() {
   // Собственный цикл кадров вместо класса Camera. Защита isProcessing —
   // ГЛАВНЫЙ фикс: без неё кадры отправлялись в модель быстрее, чем она успевала
   // их обрабатывать, запросы копились друг на друга, и картинка "залипала".
+  let lastSendStarted = 0;
   function frameLoop() {
     rafId = requestAnimationFrame(frameLoop);
-    if (!window.__arenaActive || isProcessing) return;
+    if (!window.__arenaActive) return;
+
+    // ПОСЛЕДНИЙ ПРЕДОХРАНИТЕЛЬ: если кадр "завис" в обработке дольше 3с
+    // (по любой причине — даже незамеченной сейчас), сами снимаем блокировку,
+    // чтобы камера не могла зависнуть навсегда.
+    if (isProcessing && lastSendStarted && (Date.now() - lastSendStarted > 3000)) {
+      isProcessing = false;
+    }
+    if (isProcessing) return;
     if (videoElement.readyState < 2) return; // видео ещё не готово отдавать кадры
+
     isProcessing = true;
+    lastSendStarted = Date.now();
     globalPose.send({ image: videoElement })
       .catch(err => console.error("Ошибка ИИ:", err))
       .finally(() => { isProcessing = false; });
