@@ -12,6 +12,12 @@ document.addEventListener('visibilitychange', async () => {
 
 function toRomanNum(n) { return ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][n] || String(n); }
 
+// Хелпер для картинок из assets/ вместо эмодзи. onerror прячет иконку, если файл
+// вдруг не найден/переименован — чтобы вместо "битой картинки" было пусто, а не мусор.
+function assetIcon(path) {
+  return `<img src="${path}" style="width:100%; height:100%; object-fit:contain;" onerror="this.style.display='none'">`;
+}
+
 const CHAPTERS = [
   { num: 1, name: "Шепчущий Лес", cls: "chapter-1" }, { num: 2, name: "Затопленные Пещеры", cls: "chapter-2" },
   { num: 3, name: "Руины Храма", cls: "chapter-3" }, { num: 4, name: "Ледяные Пустоши", cls: "chapter-4" },
@@ -44,9 +50,10 @@ const names = [
 for(let i=0; i<10; i++) {
   for(let j=0; j<5; j++) {
     const isBoss = (j === 4); const multiplier = 1 + (j * 0.5) + (isBoss ? 2 : 0);
+    const globalIdx = i * 5 + j; // 0..49
     MONSTERS_RAW.push({
       chapter: i+1, name: names[i][j], hp: Math.floor(baseHp[i] * multiplier),
-      icon: icons[i][j], gold: Math.floor(baseGold[i] * multiplier), atk: Math.floor(baseHp[i] * multiplier), isBoss
+      icon: assetIcon(`assets/goblins/Icon${(globalIdx % 48) + 1}.png`), gold: Math.floor(baseGold[i] * multiplier), atk: Math.floor(baseHp[i] * multiplier), isBoss
     });
   }
 }
@@ -65,7 +72,7 @@ const SHOP_ITEMS = {
     { id: "a4", name: "Панцирь Дракона", hp: 1000, price: 4000, icon: "🐉", rarity: "legendary" },
     { id: "a5", name: "Доспех Титана", hp: 5000, price: 25000, icon: "🗿", rarity: "mythic" },
     { id: "a6", name: "Эгида Богов", hp: 50000, price: 200000, icon: "🛡️", rarity: "divine" },
-    { id: "a7", name: "Рудный Панцирь", hp: 150000, price: 900000, icon: "<img src='assets/minerals/Icons_01.png' style='width:100%; height:100%; object-fit:contain;'>", rarity: "divine" }
+    { id: "a7", name: "Рудный Панцирь", hp: 150000, price: 900000, icon: "🪨", rarity: "divine" }
   ],
   weapons: [ 
     { id: "w1", name: "Ржавый Меч", damage: 1, price: 0, icon: "🗡️", rarity: "common" },
@@ -74,7 +81,7 @@ const SHOP_ITEMS = {
     { id: "w4", name: "Алмазный Секач", damage: 80, price: 3000, icon: "💎", rarity: "legendary" },
     { id: "w5", name: "Раскалыватель", damage: 400, price: 20000, icon: "🌋", rarity: "mythic" },
     { id: "w6", name: "Коса Смерти", damage: 2500, price: 150000, icon: "🪓", rarity: "divine" },
-    { id: "w7", name: "Коготь Гоблина", damage: 10000, price: 900000, icon: "<img src='assets/goblins/Icons_01.png' style='width:100%; height:100%; object-fit:contain;'>", rarity: "divine" }
+    { id: "w7", name: "Коготь Гоблина", damage: 10000, price: 900000, icon: "🐾", rarity: "divine" }
   ],
   boots: [ 
     { id: "b1", name: "Старые Сапоги", damage: 1, price: 0, icon: "🥾", rarity: "common" },
@@ -83,9 +90,16 @@ const SHOP_ITEMS = {
     { id: "b4", name: "Шаги Землетрясения", damage: 80, price: 3000, icon: "🌍", rarity: "legendary" },
     { id: "b5", name: "Ледяные Сапоги", damage: 400, price: 20000, icon: "❄️", rarity: "mythic" },
     { id: "b6", name: "Поступь Хаоса", damage: 2500, price: 150000, icon: "🌌", rarity: "divine" },
-    { id: "b7", name: "Шахтёрские Сапоги", damage: 10000, price: 900000, icon: "<img src='assets/mine/Icons_01.png' style='width:100%; height:100%; object-fit:contain;'>", rarity: "divine" }
+    { id: "b7", name: "Шахтёрские Сапоги", damage: 10000, price: 900000, icon: "🥾", rarity: "divine" }
   ]
 };
+// ФИШКА: все иконки лавки — реальные картинки из assets/mine/ вместо эмодзи выше
+// (эмодзи оставлены как запасной вариант в самих объектах, но тут же перезаписываются).
+// Броня — Icons_01..07, оружие — Icons_08..14, сапоги — Icons_15..21.
+const pad2 = (n) => String(n).padStart(2, '0');
+SHOP_ITEMS.armors.forEach((it, idx) => { it.icon = assetIcon(`assets/mine/Icons_${pad2(idx + 1)}.png`); });
+SHOP_ITEMS.weapons.forEach((it, idx) => { it.icon = assetIcon(`assets/mine/Icons_${pad2(idx + 8)}.png`); });
+SHOP_ITEMS.boots.forEach((it, idx) => { it.icon = assetIcon(`assets/mine/Icons_${pad2(idx + 15)}.png`); });
 
 const ACHIEVEMENTS = [
   { id: "a1", name: "Первая Кровь", desc: "Сделайте 1 отжимание в бою", type: "pushups", target: 1, reward: 10, icon: "🩸" },
@@ -120,6 +134,8 @@ const ACHIEVEMENTS = [
   { id: "g4", name: "Аристократ", desc: "Собери 100,000 золота", type: "gold", target: 100000, reward: 20000, icon: "👑" },
   { id: "g5", name: "Дракон", desc: "Собери 1,000,000 золота", type: "gold", target: 1000000, reward: 200000, icon: "🐉" }
 ];
+// ФИШКА: иконки титулов — картинки из assets/minerals/ вместо эмодзи выше (31 достижение → Icon1..Icon31).
+ACHIEVEMENTS.forEach((a, idx) => { a.icon = assetIcon(`assets/minerals/Icon${idx + 1}.png`); });
 
 // ЗАЩИТА ОТ СТАРЫХ СОХРАНЕНИЙ: раньше строка ниже была `JSON.parse(...) || {дефолты}` —
 // это подставляло дефолты ТОЛЬКО если в localStorage вообще ничего не было. Если же
