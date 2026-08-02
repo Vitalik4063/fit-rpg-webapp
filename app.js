@@ -424,7 +424,8 @@ function updateGameUI() {
   document.getElementById('camp-gold').innerText = gameState.gold;
   document.getElementById('camp-hp-val').innerText = Math.floor(gameState.playerHp);
   document.getElementById('camp-level').innerText = gameState.monsterIdx + 1;
-  document.getElementById('camp-reps').innerText = gameState.totalPushups + gameState.totalSquats;
+  document.getElementById('camp-reps-pushups').innerText = gameState.totalPushups;
+  document.getElementById('camp-reps-squats').innerText = gameState.totalSquats;
 
   document.getElementById('dmg-pushup-val').innerText = getDamagePushup();
   document.getElementById('dmg-squat-val').innerText = getDamageSquat();
